@@ -20,4 +20,29 @@ spec:
           image: yaongmeow/yadan-be:latest # TODO: 우리 백엔드 이미지로 변경 필요
           ports:
             - containerPort: 8080
-#          env:
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: DB_PORT
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: DB_PASS
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: DB_USER
