@@ -1,0 +1,23 @@
+apiVersion: apps/v1 # 이 Deployment를 apps 그룹의 v1 규격으로 처리하라”는 쿠버네티스 API 버전 지정
+kind: Deployment
+metadata:
+  name: be # cli로 관리 할 때 사용하기 위한 이름
+  namespace: yadan
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: be-app # 아래 app의 이름과 동일해야 한다.  -> 자기가 관리할 pod 선택 기준
+  template:
+    metadata:
+      labels:
+        app: be-app # 서비스의 selector.app과 연결 -> 내가 생성하는 pod에 라벨을 붙이겠다는 의미
+    spec:
+      imagePullSecrets:
+        - name: dockerhub-secret
+      containers:
+        - name: app
+          image: yaongmeow/yadan-be:latest # TODO: 우리 백엔드 이미지로 변경 필요
+          ports:
+            - containerPort: 8080
+#          env:

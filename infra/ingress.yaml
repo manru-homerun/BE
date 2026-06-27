@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: yadan
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt"
+    # cluster-issuer.yaml의 metadata의 이름을 가져옴
+    # cluster-issuer.yaml에서 정의한 방식으로 인증서를 발급받으라는 의미
+spec:
+  # 인증서 설정하여 https 접속을 가능하게 함
+  tls:
+    - hosts:
+        - yadan.yaongmeow.com
+      secretName: yd-tls
+  rules:
+    - host: yadan.yaongmeow.com
+      http:
+        paths:
+          # 백엔드 서비스
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: yd-be
+                port:
+                  number: 80
