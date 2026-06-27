@@ -1,3 +1,7 @@
 spring:
   application:
     name: yadan
+
+  mvc:
+    servlet:
+      path=/api:
