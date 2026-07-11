@@ -1,4 +1,4 @@
-package com.manruhomerun.yadan.config;
+package com.manruhomerun.yadan.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,10 +17,10 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .addServersItem(new Server().url("/api").description("Base API URL"))
                 .info(new Info()
-                        .title("Yadan Baseball API")
+                        .title("야단법석")
                         .version("v1")
-                        .description("프로야구 경기 상세 및 일정 조회를 위한 API 문서입니다.")
-                        .contact(new Contact().name("Yadan Team"))
+                        .description("관광데이터 활용공모전 참가를 위한 야구 경기 기반 여행 코스 추천 서비스 \"야단법석\" API 문서")
+                        .contact(new Contact().name("Team 만루홈런"))
                         .license(new License().name("Internal Use")));
     }
 }

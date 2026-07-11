@@ -1,4 +1,4 @@
-package com.manruhomerun.yadan.baseball.domain;
+package com.manruhomerun.yadan.baseball.domain.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

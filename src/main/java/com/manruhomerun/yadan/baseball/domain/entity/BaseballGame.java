@@ -1,4 +1,4 @@
-package com.manruhomerun.yadan.baseball.domain;
+package com.manruhomerun.yadan.baseball.domain.entity;
 
 import java.time.LocalDateTime;
 

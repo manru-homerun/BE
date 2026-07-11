@@ -1,4 +1,4 @@
-package com.manruhomerun.yadan.baseball.domain;
+package com.manruhomerun.yadan.baseball.domain.entity;
 
 import java.math.BigDecimal;
 
@@ -34,4 +34,8 @@ public class BaseballStadium {
 
     @Column(nullable = false)
     private BigDecimal longitude;
+
+    @Column(nullable = false, length = 5)
+    private String regionCode;
+
 }
