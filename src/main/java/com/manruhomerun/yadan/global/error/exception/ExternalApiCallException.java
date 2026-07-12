@@ -1,4 +1,7 @@
-package com.manruhomerun.yadan.global.error;
+package com.manruhomerun.yadan.global.error.exception;
+
+import com.manruhomerun.yadan.global.error.BaseException;
+import com.manruhomerun.yadan.global.error.CommonErrorCode;
 
 public class ExternalApiCallException extends BaseException {
 

@@ -2,7 +2,7 @@ package com.manruhomerun.yadan.global.client;
 
 import java.util.Map;
 
-import com.manruhomerun.yadan.global.error.ExternalApiCallException;
+import com.manruhomerun.yadan.global.error.exception.ExternalApiCallException;
 import com.manruhomerun.yadan.global.properties.TourApiProperties;
 import com.manruhomerun.yadan.travelspot.dto.TourApiResponse;
 import lombok.RequiredArgsConstructor;

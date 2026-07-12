@@ -8,12 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.manruhomerun.yadan.global.client.ExternalApiClient;
-import com.manruhomerun.yadan.global.error.UserNotFoundException;
+import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travelspot.domain.entity.Dibs;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travelspot.error.TravelSpotErrorCode;
-import com.manruhomerun.yadan.travelspot.error.TravelSpotException;
+import com.manruhomerun.yadan.travelspot.error.exception.TravelSpotException;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;

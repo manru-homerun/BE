@@ -12,7 +12,7 @@ import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
 import com.manruhomerun.yadan.baseball.dto.BaseballGameDetailResponse;
 import com.manruhomerun.yadan.baseball.dto.BaseballGameScheduleItemResponse;
 import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
-import com.manruhomerun.yadan.baseball.error.BaseballResourceNotFoundException;
+import com.manruhomerun.yadan.baseball.error.exception.BaseballResourceNotFoundException;
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
 import com.manruhomerun.yadan.baseball.repository.BaseballStadiumRepository;
 import com.manruhomerun.yadan.baseball.repository.BaseballTeamRepository;
