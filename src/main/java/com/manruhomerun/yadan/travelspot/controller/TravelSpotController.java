@@ -51,8 +51,8 @@ public class TravelSpotController {
             @PathVariable String contentId,
             HttpServletRequest httpRequest
     ) {
-        String userId = (String) httpRequest.getAttribute("userId");
-
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
         travelSpotService.createDibs(userId, contentId);
         return ResponseEntity.status(201).build();
     }
@@ -71,8 +71,8 @@ public class TravelSpotController {
             @PathVariable String contentId,
             HttpServletRequest httpRequest
     ) {
-        String userId = (String) httpRequest.getAttribute("userId");
-
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
         travelSpotService.deleteDibs(userId, contentId);
         return ResponseEntity.noContent().build();
     }
@@ -93,8 +93,8 @@ public class TravelSpotController {
             @RequestParam String regionCode,
             HttpServletRequest httpRequest
     ) {
-        String userId = (String) httpRequest.getAttribute("userId");
-
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
         return ResponseEntity.ok(travelSpotService.getDibs(userId, regionCode));
     }
 }
