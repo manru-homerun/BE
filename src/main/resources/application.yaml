@@ -32,3 +32,10 @@ springdoc:
     operations-sorter: method
     tags-sorter: alpha
     display-request-duration: true
+
+env:
+  tour-api:
+    base-url: ${TOUR_API_KOR_SERVICE_BASE_URL}
+    mobile-os: AND
+    mobile-app: 야단법석
+    service-key: ${TOUR_API_SERVICE_KEY}
