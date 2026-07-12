@@ -12,5 +12,5 @@ public interface DibsRepository extends JpaRepository<Dibs, Long> {
 
     void deleteByUserIdAndTravelSpotId(String userId, String travelSpotId);
 
-    List<Dibs> findByUserIdAndTravelSpotRegionCodeOrderByCreatedAtDescIdDesc(String userId, String regionCode);
+    List<Dibs> findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(String userId, String regionCodePrefix);
 }

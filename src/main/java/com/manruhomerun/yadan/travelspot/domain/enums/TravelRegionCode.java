@@ -20,6 +20,10 @@ public enum TravelRegionCode {
         this.cityName = cityName;
     }
 
+    public static String toPrefix(String code) {
+        return code.replaceFirst("0+$", "");
+    }
+
     public static boolean isSupported(String code) {
         for (TravelRegionCode regionCode : values()) {
             if (regionCode.code.equals(code)) {

@@ -105,7 +105,10 @@ public class TravelSpotService {
             );
         }
 
-        return dibsRepository.findByUserIdAndTravelSpotRegionCodeOrderByCreatedAtDescIdDesc(userId, regionCode).stream()
+        // 기준 지역 코드의 뒤쪽 0을 제거한 prefix로 같은 지역 소속 여행지를 조회한다.
+        String regionCodePrefix = TravelRegionCode.toPrefix(regionCode);
+
+        return dibsRepository.findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(userId, regionCodePrefix).stream()
                 .map(Dibs::getTravelSpot)
                 .map(TravelSpotDibsItemResponse::from)
                 .toList();
