@@ -2,6 +2,7 @@ package com.manruhomerun.yadan.travelspot.service;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -11,7 +12,9 @@ import com.manruhomerun.yadan.global.client.ExternalApiClient;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travelspot.domain.entity.Dibs;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
+import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
 import com.manruhomerun.yadan.travelspot.error.TravelSpotErrorCode;
 import com.manruhomerun.yadan.travelspot.error.exception.TravelSpotException;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
@@ -88,5 +91,23 @@ public class TravelSpotService {
 
         // DELETE는 멱등적으로 처리해, 찜이 없어도 성공 응답을 반환한다.
         dibsRepository.deleteByUserIdAndTravelSpotId(userId, contentId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TravelSpotDibsItemResponse> getDibs(String userId, String regionCode) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException());
+
+        if (regionCode == null || !TravelRegionCode.isSupported(regionCode)) {
+            throw new TravelSpotException(
+                    TravelSpotErrorCode.TRAVEL_SPOT_REGION_CODE_INVALID,
+                    "유효하지 않은 regionCode입니다. regionCode=" + regionCode
+            );
+        }
+
+        return dibsRepository.findByUserIdAndTravelSpotRegionCodeOrderByCreatedAtDescIdDesc(userId, regionCode).stream()
+                .map(Dibs::getTravelSpot)
+                .map(TravelSpotDibsItemResponse::from)
+                .toList();
     }
 }
