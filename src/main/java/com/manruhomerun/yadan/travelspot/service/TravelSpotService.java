@@ -81,4 +81,12 @@ public class TravelSpotService {
             );
         }
     }
+
+    public void deleteDibs(String userId, String contentId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException());
+
+        // DELETE는 멱등적으로 처리해, 찜이 없어도 성공 응답을 반환한다.
+        dibsRepository.deleteByUserIdAndTravelSpotId(userId, contentId);
+    }
 }

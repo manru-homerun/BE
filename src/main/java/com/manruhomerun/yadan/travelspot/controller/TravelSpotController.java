@@ -1,6 +1,7 @@
 package com.manruhomerun.yadan.travelspot.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,5 +50,25 @@ public class TravelSpotController {
 
         travelSpotService.createDibs(userId, contentId);
         return ResponseEntity.status(201).build();
+    }
+
+    @DeleteMapping("/{contentId}/dibs")
+    @Operation(summary = "여행지 찜 취소")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "여행지 찜 취소 성공"),
+            @ApiResponse(responseCode = "401", description = "사용자 식별값 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> deleteDibs(
+            @Parameter(description = "외부 관광 API의 contentId", example = "132159")
+            @PathVariable String contentId,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+
+        travelSpotService.deleteDibs(userId, contentId);
+        return ResponseEntity.noContent().build();
     }
 }

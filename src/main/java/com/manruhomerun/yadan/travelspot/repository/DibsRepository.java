@@ -7,4 +7,6 @@ import com.manruhomerun.yadan.travelspot.domain.entity.Dibs;
 public interface DibsRepository extends JpaRepository<Dibs, Long> {
 
     boolean existsByUserIdAndTravelSpotId(String userId, String travelSpotId);
+
+    void deleteByUserIdAndTravelSpotId(String userId, String travelSpotId);
 }
