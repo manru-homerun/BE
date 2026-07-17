@@ -27,10 +27,6 @@ public enum KboTeamCode {
         return teamId;
     }
 
-    public String getTeamName() {
-        return teamName;
-    }
-
     public static KboTeamCode from(String value) {
         return Arrays.stream(values())
                 .filter(teamCode -> teamCode.name().equalsIgnoreCase(value))

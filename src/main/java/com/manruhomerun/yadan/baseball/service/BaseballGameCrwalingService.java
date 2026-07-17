@@ -34,6 +34,7 @@ public class BaseballGameCrwalingService {
     public void syncNextMonthSchedules() {
         // 매달 15일 새벽 1시 다음 달 경기 일정을 동기화합니다.
         YearMonth nextMonth = YearMonth.from(LocalDate.now(KOREA_ZONE_ID).plusMonths(1));
+        log.info("다음 달({}) 경기 일정 정기 동기화 작업을 진행합니다.", nextMonth.toString());
         syncSchedules(nextMonth.atDay(1), nextMonth.atEndOfMonth());
     }
 
@@ -91,6 +92,7 @@ public class BaseballGameCrwalingService {
         // 매일 새벽 1시 전날 경기 결과를 업데이트합니다.
         // 취소 경기 편성 시 월요일에도 경기를 진행할 수 있기 때문에 크롤링을 진행합니다.
         LocalDate previousDate = LocalDate.now(KOREA_ZONE_ID).minusDays(1);
+        log.info("전날({}) 경기 결과 정기 동기화 작업을 진행합니다.", previousDate);
         updateResults(previousDate);
     }
 

@@ -26,10 +26,6 @@ public enum KboStadiumCode {
         return stadiumId;
     }
 
-    public String getStadiumName() {
-        return stadiumName;
-    }
-
     public static KboStadiumCode from(String value) {
         return Arrays.stream(values())
                 .filter(stadiumCode -> stadiumCode.name().equalsIgnoreCase(value))
