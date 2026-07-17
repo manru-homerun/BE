@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
 import org.springframework.data.jpa.repository.Query;
@@ -29,8 +31,7 @@ public interface BaseballGameRepository extends JpaRepository<BaseballGame, Long
         ORDER BY bg.gameDate ASC, bg.id ASC
     """)
     Page<BaseballGame> findUpcomingGamesByTeamId(
-            Long homeTeamId,
-            Long awayTeamId,
+            Long teamId,
             LocalDateTime baselineDateTime,
             Pageable pageable
     );
