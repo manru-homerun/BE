@@ -4,7 +4,7 @@ spring:
 
   mvc:
     servlet:
-      path=/api:
+      path: /api
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -23,3 +23,19 @@ spring:
           order_updates: true
     show-sql: false
     open-in-view: false
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+env:
+  tour-api:
+    base-url: ${TOUR_API_KOR_SERVICE_BASE_URL}
+    mobile-os: AND
+    mobile-app: 야단법석
+    service-key: ${TOUR_API_SERVICE_KEY}
