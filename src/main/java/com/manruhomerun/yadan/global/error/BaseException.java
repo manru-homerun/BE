@@ -1,10 +1,10 @@
 package com.manruhomerun.yadan.global.error;
 
-public class CustomException extends RuntimeException {
+public class BaseException extends RuntimeException {
 
     private final BaseErrorCode errorCode;
 
-    protected CustomException(BaseErrorCode errorCode, String message) {
+    protected BaseException(BaseErrorCode errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
     }
