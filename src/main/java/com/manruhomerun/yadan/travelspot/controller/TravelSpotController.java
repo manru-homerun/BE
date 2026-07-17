@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
 import com.manruhomerun.yadan.travelspot.service.TravelSpotService;
 
@@ -81,7 +82,7 @@ public class TravelSpotController {
     @Operation(summary = "여행지 찜 목록 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행지 찜 목록 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 regionCode 요청",
+            @ApiResponse(responseCode = "400", description = "잘못된 region 요청",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "사용자 식별값 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -89,12 +90,12 @@ public class TravelSpotController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<List<TravelSpotDibsItemResponse>> getDibs(
-            @Parameter(description = "조회할 지역 코드", example = "26000")
-            @RequestParam String regionCode,
+            @Parameter(description = "조회할 지역", example = "BUSAN")
+            @RequestParam TravelRegionCode region,
             HttpServletRequest httpRequest
     ) {
 //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
-        return ResponseEntity.ok(travelSpotService.getDibs(userId, regionCode));
+        return ResponseEntity.ok(travelSpotService.getDibs(userId, region));
     }
 }

@@ -1,7 +1,5 @@
 package com.manruhomerun.yadan.travelspot.domain.enums;
 
-// 프론트로부터 지역 코드 값(숫자 형식)을 받는 게 맞는지는 고민해볼 주제인 것 같습니다.
-// 일단은 지역 코드 받도록 구현해두겠습니다.
 public enum TravelRegionCode {
     GWANGJU("12000", "광주"),
     SEOUL("11000", "서울"),
@@ -20,17 +18,7 @@ public enum TravelRegionCode {
         this.cityName = cityName;
     }
 
-    public static String toPrefix(String code) {
+    public String getCodePrefix() {
         return code.replaceFirst("0+$", "");
-    }
-
-    public static boolean isSupported(String code) {
-        for (TravelRegionCode regionCode : values()) {
-            if (regionCode.code.equals(code)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

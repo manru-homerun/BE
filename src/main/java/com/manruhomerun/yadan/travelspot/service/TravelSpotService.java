@@ -94,19 +94,12 @@ public class TravelSpotService {
     }
 
     @Transactional(readOnly = true)
-    public List<TravelSpotDibsItemResponse> getDibs(String userId, String regionCode) {
+    public List<TravelSpotDibsItemResponse> getDibs(String userId, TravelRegionCode regionCode) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException());
 
-        if (regionCode == null || !TravelRegionCode.isSupported(regionCode)) {
-            throw new TravelSpotException(
-                    TravelSpotErrorCode.TRAVEL_SPOT_REGION_CODE_INVALID,
-                    "유효하지 않은 regionCode입니다. regionCode=" + regionCode
-            );
-        }
-
         // 기준 지역 코드의 뒤쪽 0을 제거한 prefix로 같은 지역 소속 여행지를 조회한다.
-        String regionCodePrefix = TravelRegionCode.toPrefix(regionCode);
+        String regionCodePrefix = regionCode.getCodePrefix();
 
         return dibsRepository.findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(userId, regionCodePrefix).stream()
                 .map(Dibs::getTravelSpot)
