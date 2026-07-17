@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/baseball/crawl")
-@Tag(name = "Baseball Crawling Test", description = "프로야구 수동 크롤링 API")
+@Tag(name = "Baseball Crawling", description = "프로야구 수동 크롤링 API")
 public class BaseballCrawlingTestController {
 
     private final BaseballGameCrwalingService baseballGameCrwalingService;
