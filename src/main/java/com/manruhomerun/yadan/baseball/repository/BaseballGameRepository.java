@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
+import org.springframework.data.jpa.repository.Query;
 
 public interface BaseballGameRepository extends JpaRepository<BaseballGame, Long> {
 
@@ -16,7 +17,18 @@ public interface BaseballGameRepository extends JpaRepository<BaseballGame, Long
             Pageable pageable
     );
 
-    Page<BaseballGame> findByHomeTeamIdOrAwayTeamIdAndGameDateGreaterThanEqualOrderByGameDateAscIdAsc(
+    @Query("""
+        SELECT bg
+    
+        FROM BaseballGame bg
+    
+        WHERE (bg.homeTeam.id = :teamId OR bg.awayTeam.id = :teamId)
+    
+          AND bg.gameDate >= :gameDate
+    
+        ORDER BY bg.gameDate ASC, bg.id ASC
+    """)
+    Page<BaseballGame> findUpcomingGamesByTeamId(
             Long homeTeamId,
             Long awayTeamId,
             LocalDateTime baselineDateTime,

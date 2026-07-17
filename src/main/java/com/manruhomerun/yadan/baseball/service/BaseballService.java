@@ -83,7 +83,7 @@ public class BaseballService {
                 Sort.by(Sort.Order.asc("gameDate"), Sort.Order.asc("id"))
         );
 
-        Page<BaseballGame> page = baseballGameRepository.findByHomeTeamIdOrAwayTeamIdAndGameDateGreaterThanEqualOrderByGameDateAscIdAsc(
+        Page<BaseballGame> page = baseballGameRepository.findUpcomingGamesByTeamId(
                 teamId,
                 teamId,
                 (baselineDate == null ? LocalDate.now() : baselineDate).atStartOfDay(),
