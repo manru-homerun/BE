@@ -59,4 +59,24 @@ public class BaseballGame {
 
     @Column(name = "is_canceled")
     private Boolean isCanceled;
+
+    public void updateSchedule(
+            BaseballStadium stadium,
+            BaseballTeam homeTeam,
+            BaseballTeam awayTeam,
+            LocalDateTime gameDate,
+            BaseballGameType gameType
+    ) {
+        this.stadium = stadium;
+        this.homeTeam = homeTeam;
+        this.awayTeam = awayTeam;
+        this.gameDate = gameDate;
+        this.gameType = gameType;
+    }
+
+    public void updateResult(Integer awayTeamScore, Integer homeTeamScore, boolean isCanceled) {
+        this.awayTeamScore = awayTeamScore;
+        this.homeTeamScore = homeTeamScore;
+        this.isCanceled = isCanceled;
+    }
 }
