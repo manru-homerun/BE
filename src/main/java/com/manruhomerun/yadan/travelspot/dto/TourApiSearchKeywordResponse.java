@@ -3,6 +3,8 @@ package com.manruhomerun.yadan.travelspot.dto;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TourApiSearchKeywordResponse(
@@ -42,12 +44,69 @@ public record TourApiSearchKeywordResponse(
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Body(
-            Items items,
-            Integer numOfRows,
-            Integer pageNo,
-            Integer totalCount
-    ) {
+    public static final class Body {
+
+        private Items items;
+        private Integer numOfRows;
+        private Integer pageNo;
+        private Integer totalCount;
+
+        public Items items() {
+            return items;
+        }
+
+        public Integer numOfRows() {
+            return numOfRows;
+        }
+
+        public Integer pageNo() {
+            return pageNo;
+        }
+
+        public Integer totalCount() {
+            return totalCount;
+        }
+
+        @JsonSetter("items")
+        public void setItems(JsonNode items) {
+            if (items == null || items.isNull() || items.isTextual()) {
+                this.items = null;
+                return;
+            }
+
+            JsonNode itemNode = items.get("item");
+            if (itemNode == null || itemNode.isNull() || !itemNode.isArray()) {
+                this.items = null;
+                return;
+            }
+
+            this.items = new Items(
+                    java.util.stream.StreamSupport.stream(itemNode.spliterator(), false)
+                            .map(node -> new Item(
+                                    node.path("addr1").asText(null),
+                                    node.path("addr2").asText(null),
+                                    node.path("contentid").asText(null),
+                                    node.path("contenttypeid").asText(null),
+                                    node.path("firstimage").asText(null),
+                                    node.path("title").asText(null),
+                                    node.path("lDongRegnCd").asText(null),
+                                    node.path("lDongSignguCd").asText(null)
+                            ))
+                            .toList()
+            );
+        }
+
+        public void setNumOfRows(Integer numOfRows) {
+            this.numOfRows = numOfRows;
+        }
+
+        public void setPageNo(Integer pageNo) {
+            this.pageNo = pageNo;
+        }
+
+        public void setTotalCount(Integer totalCount) {
+            this.totalCount = totalCount;
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
