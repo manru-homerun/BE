@@ -2,7 +2,10 @@ package com.manruhomerun.yadan.travelspot.controller;
 
 import java.util.List;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,15 +23,16 @@ import com.manruhomerun.yadan.travelspot.dto.TravelSpotSearchItemResponse;
 import com.manruhomerun.yadan.travelspot.service.TravelSpotService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/travel/spots")
@@ -48,13 +52,13 @@ public class TravelSpotController {
     })
     public ResponseEntity<PageResponse<TravelSpotSearchItemResponse>> getSpots(
             @Parameter(description = "검색어", example = "시장", required = true)
-            @RequestParam String keyword,
+            @RequestParam @NotBlank(message = "keyword는 필수입니다.") String keyword,
             @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
             @RequestParam TravelRegionCode region,
             @Parameter(description = "페이지 번호", example = "1")
-            @RequestParam(defaultValue = "1") int pageNumber,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "pageNumber는 1 이상이어야 합니다.") int pageNumber,
             @Parameter(description = "페이지 크기", example = "10")
-            @RequestParam(defaultValue = "10") int pageSize
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "pageSize는 1 이상이어야 합니다.") int pageSize
     ) {
         return ResponseEntity.ok(travelSpotService.getSpots(keyword, region, pageNumber, pageSize));
     }

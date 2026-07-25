@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.manruhomerun.yadan.global.client.ExternalApiClient;
 import com.manruhomerun.yadan.global.dto.PageResponse;
-import com.manruhomerun.yadan.global.error.exception.ValidationException;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travelspot.domain.entity.Dibs;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
@@ -181,14 +180,6 @@ public class TravelSpotService {
 
     @Transactional(readOnly = true)
     public PageResponse<TravelSpotSearchItemResponse> getSpots(String keyword, TravelRegionCode region, int pageNumber, int pageSize) {
-        if (pageNumber < 1) {
-            throw new ValidationException("pageNumber는 1 이상이어야 합니다. pageNumber=" + pageNumber);
-        }
-
-        if (pageSize < 1) {
-            throw new ValidationException("pageSize는 1 이상이어야 합니다. pageSize=" + pageSize);
-        }
-
         String regionCode = region.getCode();
 
         Map<String, Object> queryParams = new LinkedHashMap<>();
