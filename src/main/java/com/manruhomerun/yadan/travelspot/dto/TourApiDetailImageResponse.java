@@ -55,7 +55,6 @@ public record TourApiDetailImageResponse(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Item(
-            String contentid,
             String originimgurl
     ) {
     }

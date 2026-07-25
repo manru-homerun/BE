@@ -61,8 +61,6 @@ public record TourApiDetailCommonResponse(
             String tel,
             String homepage,
             String firstimage,
-            String areacode,
-            String sigungucode,
             String lDongRegnCd,
             String lDongSignguCd,
             String addr1,
