@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
+import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDetailResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
+import com.manruhomerun.yadan.travelspot.dto.TravelSpotSearchItemResponse;
 import com.manruhomerun.yadan.travelspot.service.TravelSpotService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,6 +36,28 @@ import lombok.RequiredArgsConstructor;
 public class TravelSpotController {
 
     private final TravelSpotService travelSpotService;
+
+    @GetMapping
+    @Operation(summary = "여행지 검색")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "여행지 검색 성공", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<PageResponse<TravelSpotSearchItemResponse>> getSpots(
+            @Parameter(description = "검색어", example = "시장", required = true)
+            @RequestParam String keyword,
+            @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
+            @RequestParam TravelRegionCode region,
+            @Parameter(description = "페이지 번호", example = "1")
+            @RequestParam(defaultValue = "1") int pageNumber,
+            @Parameter(description = "페이지 크기", example = "10")
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
+        return ResponseEntity.ok(travelSpotService.getSpots(keyword, region, pageNumber, pageSize));
+    }
 
     @GetMapping("/{spotId}")
     @Operation(summary = "여행지 상세 조회")

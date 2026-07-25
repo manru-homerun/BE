@@ -5,10 +5,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.manruhomerun.yadan.global.client.ExternalApiClient;
+import com.manruhomerun.yadan.global.dto.PageResponse;
+import com.manruhomerun.yadan.global.error.exception.ValidationException;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travelspot.domain.entity.Dibs;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
@@ -16,8 +20,10 @@ import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailImageResponse;
+import com.manruhomerun.yadan.travelspot.dto.TourApiSearchKeywordResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDetailResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
+import com.manruhomerun.yadan.travelspot.dto.TravelSpotSearchItemResponse;
 import com.manruhomerun.yadan.travelspot.error.TravelSpotErrorCode;
 import com.manruhomerun.yadan.travelspot.error.exception.TravelSpotException;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
@@ -171,5 +177,65 @@ public class TravelSpotService {
                 .map(TourApiDetailImageResponse.Item::originimgurl)
                 .filter(originImageUrl -> originImageUrl != null && !originImageUrl.isBlank())
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TravelSpotSearchItemResponse> getSpots(String keyword, TravelRegionCode region, int pageNumber, int pageSize) {
+        if (pageNumber < 1) {
+            throw new ValidationException("pageNumber는 1 이상이어야 합니다. pageNumber=" + pageNumber);
+        }
+
+        if (pageSize < 1) {
+            throw new ValidationException("pageSize는 1 이상이어야 합니다. pageSize=" + pageSize);
+        }
+
+        String regionCode = region.getCode();
+
+        Map<String, Object> queryParams = new LinkedHashMap<>();
+        queryParams.put("keyword", keyword);
+        queryParams.put("numOfRows", pageSize);
+        queryParams.put("pageNo", pageNumber);
+        queryParams.put("lDongRegnCd", regionCode.substring(0, 2));
+
+        String signguCode = regionCode.substring(2);
+        if (!"000".equals(signguCode)) {
+            queryParams.put("lDongSignguCd", signguCode);
+        }
+
+        TourApiSearchKeywordResponse response = externalApiClient.get(
+                "/searchKeyword2",
+                queryParams,
+                TourApiSearchKeywordResponse.class
+        );
+
+        if (response.response().body() == null) {
+            return PageResponse.from(
+                    new PageImpl<>(
+                            List.of(),
+                            PageRequest.of(pageNumber - 1, pageSize),
+                            0
+                    ),
+                    List.of()
+            );
+        }
+
+        List<TravelSpotSearchItemResponse> content = response.response().body().items() == null
+                || response.response().body().items().item() == null
+                ? List.of()
+                : response.response().body().items().item().stream()
+                .map(TravelSpotSearchItemResponse::from)
+                .toList();
+
+        int resolvedPageSize = response.response().body().numOfRows() == null ? pageSize : response.response().body().numOfRows();
+        long totalElements = response.response().body().totalCount() == null ? 0 : response.response().body().totalCount();
+
+        return PageResponse.from(
+                new PageImpl<>(
+                        content,
+                        PageRequest.of(pageNumber - 1, resolvedPageSize),
+                        totalElements
+                ),
+                content
+        );
     }
 }
