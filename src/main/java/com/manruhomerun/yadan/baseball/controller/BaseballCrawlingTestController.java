@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.manruhomerun.yadan.baseball.service.BaseballGameCrwalingService;
+import com.manruhomerun.yadan.baseball.service.BaseballGameCrawlingService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Baseball Crawling", description = "프로야구 수동 크롤링 API")
 public class BaseballCrawlingTestController {
 
-    private final BaseballGameCrwalingService baseballGameCrwalingService;
+    private final BaseballGameCrawlingService baseballGameCrawlingService;
 
     @PostMapping("/schedules")
     @Operation(summary = "지정한 날짜 범위의 경기 일정을 수동 크롤링")
@@ -32,7 +32,7 @@ public class BaseballCrawlingTestController {
             @Parameter(description = "크롤링 종료일", example = "2026-08-31")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        baseballGameCrwalingService.syncSchedules(startDate, endDate);
+        baseballGameCrawlingService.syncSchedules(startDate, endDate);
         return ResponseEntity.noContent().build();
     }
 
@@ -42,7 +42,7 @@ public class BaseballCrawlingTestController {
             @Parameter(description = "결과 업데이트 대상 날짜", example = "2026-07-16")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate
     ) {
-        baseballGameCrwalingService.updateResults(targetDate);
+        baseballGameCrawlingService.updateResults(targetDate);
         return ResponseEntity.noContent().build();
     }
 }

@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class BaseballGameCrwalingService {
+public class BaseballGameCrawlingService {
 
     private static final ZoneId KOREA_ZONE_ID = ZoneId.of("Asia/Seoul");
 
