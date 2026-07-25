@@ -41,3 +41,5 @@ env:
     service-key: ${TOUR_API_SERVICE_KEY}
   kbo:
     base-url: ${KBO_BASE_URL:https://eng.koreabaseball.com}
+  global:
+    webhook-url: ${DISCORD_WEBHOOK_URL:}
