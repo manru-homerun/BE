@@ -15,6 +15,7 @@ import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
+import com.manruhomerun.yadan.travelspot.dto.TourApiDetailImageResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDetailResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
 import com.manruhomerun.yadan.travelspot.error.TravelSpotErrorCode;
@@ -147,5 +148,28 @@ public class TravelSpotService {
                 item.mapy(),
                 item.overview()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> getSpotImages(String spotId) {
+        Map<String, Object> queryParams = new LinkedHashMap<>();
+        queryParams.put("contentId", spotId);
+
+        TourApiDetailImageResponse response = externalApiClient.get(
+                "/detailImage2",
+                queryParams,
+                TourApiDetailImageResponse.class
+        );
+
+        if (response.response().body() == null
+                || response.response().body().items() == null
+                || response.response().body().items().item() == null) {
+            return List.of();
+        }
+
+        return response.response().body().items().item().stream()
+                .map(TourApiDetailImageResponse.Item::originimgurl)
+                .filter(originImageUrl -> originImageUrl != null && !originImageUrl.isBlank())
+                .toList();
     }
 }

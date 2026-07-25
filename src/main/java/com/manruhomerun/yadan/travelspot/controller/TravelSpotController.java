@@ -51,6 +51,20 @@ public class TravelSpotController {
         return ResponseEntity.ok(travelSpotService.getSpotDetail(spotId));
     }
 
+    @GetMapping("/{spotId}/images")
+    @Operation(summary = "여행지 이미지 목록 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "여행지 이미지 목록 조회 성공"),
+            @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<List<String>> getSpotImages(
+            @Parameter(description = "외부 관광 API의 contentId", example = "2479634")
+            @PathVariable String spotId
+    ) {
+        return ResponseEntity.ok(travelSpotService.getSpotImages(spotId));
+    }
+
     @PostMapping("/{contentId}/dibs")
     @Operation(summary = "여행지 찜 생성")
     @ApiResponses(value = {
