@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.dto.TravelSpotDetailResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
 import com.manruhomerun.yadan.travelspot.service.TravelSpotService;
 
@@ -33,6 +34,22 @@ import lombok.RequiredArgsConstructor;
 public class TravelSpotController {
 
     private final TravelSpotService travelSpotService;
+
+    @GetMapping("/{spotId}")
+    @Operation(summary = "여행지 상세 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "여행지 상세 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "여행지를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<TravelSpotDetailResponse> getSpotDetail(
+            @Parameter(description = "외부 관광 API의 contentId", example = "2479634")
+            @PathVariable String spotId
+    ) {
+        return ResponseEntity.ok(travelSpotService.getSpotDetail(spotId));
+    }
 
     @PostMapping("/{contentId}/dibs")
     @Operation(summary = "여행지 찜 생성")

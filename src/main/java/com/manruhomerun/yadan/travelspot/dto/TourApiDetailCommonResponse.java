@@ -58,13 +58,18 @@ public record TourApiDetailCommonResponse(
             String contentid,
             String contenttypeid,
             String title,
+            String tel,
+            String homepage,
             String firstimage,
             String areacode,
             String sigungucode,
             String lDongRegnCd,
             String lDongSignguCd,
+            String addr1,
+            String addr2,
             String mapx,
-            String mapy
+            String mapy,
+            String overview
     ) {
     }
 }

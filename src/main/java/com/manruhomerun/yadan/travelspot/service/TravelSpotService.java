@@ -13,7 +13,9 @@ import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travelspot.domain.entity.Dibs;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
+import com.manruhomerun.yadan.travelspot.dto.TravelSpotDetailResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
 import com.manruhomerun.yadan.travelspot.error.TravelSpotErrorCode;
 import com.manruhomerun.yadan.travelspot.error.exception.TravelSpotException;
@@ -105,5 +107,45 @@ public class TravelSpotService {
                 .map(Dibs::getTravelSpot)
                 .map(TravelSpotDibsItemResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TravelSpotDetailResponse getSpotDetail(String spotId) {
+        Map<String, Object> queryParams = new LinkedHashMap<>();
+        queryParams.put("contentId", spotId);
+
+        TourApiDetailCommonResponse response = externalApiClient.get(
+                "/detailCommon2",
+                queryParams,
+                TourApiDetailCommonResponse.class
+        );
+
+        if (response.response().body() == null
+                || response.response().body().items() == null
+                || response.response().body().items().item() == null
+                || response.response().body().items().item().isEmpty()) {
+            throw new TravelSpotException(
+                    TravelSpotErrorCode.TRAVEL_SPOT_NOT_FOUND,
+                    "여행지를 찾을 수 없습니다. contentId=" + spotId
+            );
+        }
+
+        TourApiDetailCommonResponse.Item item = response.response().body().items().item().getFirst();
+        String address = item.addr2() == null || item.addr2().isBlank()
+                ? item.addr1()
+                : item.addr1() + " " + item.addr2();
+
+        return new TravelSpotDetailResponse(
+                item.contentid(),
+                TravelSpotCategory.getDisplayNameByContentTypeId(Integer.valueOf(item.contenttypeid())),
+                item.title(),
+                item.tel(),
+                item.homepage(),
+                item.lDongRegnCd() + item.lDongSignguCd(),
+                address,
+                item.mapx(),
+                item.mapy(),
+                item.overview()
+        );
     }
 }
