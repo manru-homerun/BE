@@ -20,6 +20,18 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             """)
     List<Friend> findAllByUserId(@Param("userId") String userId);
 
+    // 친구 단건 조회
+    @Query("""
+            SELECT f
+            FROM Friend f
+            WHERE f.id = :friendId
+              AND (f.firstUser.id = :userId OR f.secondUser.id = :userId)
+            """)
+    Optional<Friend> findByIdAndUserId(
+            @Param("friendId") Long friendId,
+            @Param("userId") String userId
+    );
+
     // 사용자 쌍 조회
     Optional<Friend> findByFirstUserIdAndSecondUserId(
             String firstUserId,
