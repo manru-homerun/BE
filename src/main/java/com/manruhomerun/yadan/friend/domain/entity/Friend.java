@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +27,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "friends") // 친구
+@Table(
+        name = "friends",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_friends_user_pair",
+                        columnNames = {"first_user_id", "second_user_id"}
+                )
+        }
+)
 public class Friend {
 
     @Id
@@ -34,12 +43,12 @@ public class Friend {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "first_user_id", nullable = false)
+    private User firstUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "friend_user_id", nullable = false)
-    private User friendUser;
+    @JoinColumn(name = "second_user_id", nullable = false)
+    private User secondUser;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
