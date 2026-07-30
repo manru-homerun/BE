@@ -11,33 +11,24 @@ import com.manruhomerun.yadan.friend.domain.entity.Friend;
 
 public interface FriendRepository extends JpaRepository<Friend, Long> {
 
+    // 친구 목록 조회
     @Query("""
             SELECT f
             FROM Friend f
-            WHERE f.user.id = :userId OR f.friendUser.id = :userId
+            WHERE f.firstUser.id = :userId OR f.secondUser.id = :userId
             ORDER BY f.createdAt DESC
             """)
     List<Friend> findAllByUserId(@Param("userId") String userId);
 
-    @Query("""
-            SELECT f
-            FROM Friend f
-            WHERE (f.user.id = :userId AND f.friendUser.id = :friendUserId)
-               OR (f.user.id = :friendUserId AND f.friendUser.id = :userId)
-            """)
-    Optional<Friend> findBetweenUsers(
-            @Param("userId") String userId,
-            @Param("friendUserId") String friendUserId
+    // 사용자 쌍 조회
+    Optional<Friend> findByFirstUserIdAndSecondUserId(
+            String firstUserId,
+            String secondUserId
     );
 
-    @Query("""
-            SELECT COUNT(f) > 0
-            FROM Friend f
-            WHERE (f.user.id = :userId AND f.friendUser.id = :friendUserId)
-               OR (f.user.id = :friendUserId AND f.friendUser.id = :userId)
-            """)
-    boolean existsBetweenUsers(
-            @Param("userId") String userId,
-            @Param("friendUserId") String friendUserId
+    // 친구 여부 확인
+    boolean existsByFirstUserIdAndSecondUserId(
+            String firstUserId,
+            String secondUserId
     );
 }
