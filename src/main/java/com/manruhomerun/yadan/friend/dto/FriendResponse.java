@@ -8,7 +8,7 @@ import com.manruhomerun.yadan.user.domain.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record FriendResponse(
-        @Schema(description = "친구 관계 ID", example = "1")
+        @Schema(description = "친구 ID", example = "1")
         Long id,
 
         @Schema(
@@ -27,9 +27,9 @@ public record FriendResponse(
         LocalDateTime createdAt
 ) {
     public static FriendResponse from(Friend friend, String currentUserId) {
-        User friendUser = friend.getUser().getId().equals(currentUserId)
-                ? friend.getFriendUser()
-                : friend.getUser();
+        User friendUser = friend.getFirstUser().getId().equals(currentUserId)
+                ? friend.getSecondUser()
+                : friend.getFirstUser();
 
         return new FriendResponse(
                 friend.getId(),
