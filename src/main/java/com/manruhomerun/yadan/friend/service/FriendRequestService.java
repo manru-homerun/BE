@@ -9,6 +9,7 @@ import com.manruhomerun.yadan.friend.domain.entity.Friend;
 import com.manruhomerun.yadan.friend.domain.entity.FriendRequest;
 import com.manruhomerun.yadan.friend.domain.enums.FriendRequestStatus;
 import com.manruhomerun.yadan.friend.dto.FriendRequestCreateRequest;
+import com.manruhomerun.yadan.friend.dto.FriendRequestListResponse;
 import com.manruhomerun.yadan.friend.dto.FriendRequestResponse;
 import com.manruhomerun.yadan.friend.error.FriendErrorCode;
 import com.manruhomerun.yadan.friend.error.exception.FriendException;
@@ -32,57 +33,77 @@ public class FriendRequestService {
     // 친구 요청 생성
     public FriendRequestResponse createRequest(String requesterUserId, FriendRequestCreateRequest request) {
         String receiverUserId = request.receiverUserId();
-        // 자기 자신
+
         if (requesterUserId.equals(receiverUserId)) {
             throw new FriendException(FriendErrorCode.SELF_REQUEST_NOT_ALLOWED);
         }
 
         User requester = getUser(requesterUserId);
         User receiver = getUser(receiverUserId);
-        // 이미 친구
-        if (friendRepository.existsBetweenUsers(requesterUserId, receiverUserId)) {
+
+        // 사용자 정렬
+        User firstUser;
+        User secondUser;
+        if (requesterUserId.compareTo(receiverUserId) < 0) {
+            firstUser = requester;
+            secondUser = receiver;
+        } else {
+            firstUser = receiver;
+            secondUser = requester;
+        }
+
+        if (friendRepository.existsByFirstUserIdAndSecondUserId(
+                firstUser.getId(),
+                secondUser.getId()
+        )) {
             throw new FriendException(FriendErrorCode.ALREADY_FRIENDS);
         }
 
-        boolean pendingRequestExists = friendRequestRepository.existsBetweenUsersByStatus(
-                requesterUserId,
-                receiverUserId,
-                FriendRequestStatus.PENDING
-        );
-        // 이미 요청 보냄
-        if (pendingRequestExists) {
-            throw new FriendException(FriendErrorCode.REQUEST_ALREADY_EXISTS);
-        }
+        FriendRequest friendRequest = friendRequestRepository
+                .findByFirstUserIdAndSecondUserId(firstUser.getId(), secondUser.getId())
+                .map(existingRequest -> {
+                    if (existingRequest.getStatus() == FriendRequestStatus.PENDING) {
+                        throw new FriendException(FriendErrorCode.REQUEST_ALREADY_EXISTS);
+                    }
 
-        FriendRequest friendRequest = friendRequestRepository.save(
-                FriendRequest.builder()
-                        .requesterUser(requester)
-                        .receiverUser(receiver)
-                        .build()
-        );
+                    existingRequest.requestAgain(requester);
+                    return existingRequest;
+                })
+                .orElseGet(() -> friendRequestRepository.save(
+                        FriendRequest.builder()
+                                .firstUser(firstUser)
+                                .secondUser(secondUser)
+                                .requesterUser(requester)
+                                .build()
+                ));
+
         return FriendRequestResponse.from(friendRequest);
     }
 
     // 받은 친구 요청 목록 조회
     @Transactional(readOnly = true)
-    public List<FriendRequestResponse> getReceivedRequests(String receiverUserId) {
+    public FriendRequestListResponse getReceivedRequests(String receiverUserId) {
         getUser(receiverUserId);
-        return friendRequestRepository
-                .findByReceiverUserIdAndStatusOrderByCreatedAtDesc(receiverUserId, FriendRequestStatus.PENDING)
+        List<FriendRequestResponse> requests = friendRequestRepository
+                .findPendingReceivedRequests(receiverUserId)
                 .stream()
                 .map(FriendRequestResponse::from)
                 .toList();
+
+        return FriendRequestListResponse.from(requests);
     }
 
     // 보낸 친구 요청 목록 조회
     @Transactional(readOnly = true)
-    public List<FriendRequestResponse> getSentRequests(String requesterUserId) {
+    public FriendRequestListResponse getSentRequests(String requesterUserId) {
         getUser(requesterUserId);
-        return friendRequestRepository
-                .findByRequesterUserIdAndStatusOrderByCreatedAtDesc(requesterUserId, FriendRequestStatus.PENDING)
+        List<FriendRequestResponse> requests = friendRequestRepository
+                .findPendingSentRequests(requesterUserId)
                 .stream()
                 .map(FriendRequestResponse::from)
                 .toList();
+
+        return FriendRequestListResponse.from(requests);
     }
 
     // 친구 요청 수락
@@ -90,16 +111,18 @@ public class FriendRequestService {
         FriendRequest friendRequest = getReceivedRequest(receiverUserId, requestId);
         validatePending(friendRequest);
 
-        String requesterUserId = friendRequest.getRequesterUser().getId();
-        if (friendRepository.existsBetweenUsers(requesterUserId, receiverUserId)) {
+        if (friendRepository.existsByFirstUserIdAndSecondUserId(
+                friendRequest.getFirstUser().getId(),
+                friendRequest.getSecondUser().getId()
+        )) {
             throw new FriendException(FriendErrorCode.ALREADY_FRIENDS);
         }
 
         friendRequest.accept();
         friendRepository.save(
                 Friend.builder()
-                        .user(friendRequest.getRequesterUser())
-                        .friendUser(friendRequest.getReceiverUser())
+                        .firstUser(friendRequest.getFirstUser())
+                        .secondUser(friendRequest.getSecondUser())
                         .build()
         );
     }
@@ -110,6 +133,13 @@ public class FriendRequestService {
         friendRequest.reject();
     }
 
+    // 친구 요청 취소
+    public void cancelRequest(String requesterUserId, Long requestId) {
+        FriendRequest friendRequest = getSentRequest(requesterUserId, requestId);
+        validatePending(friendRequest);
+        friendRequest.cancel();
+    }
+
     // 사용자 정보 찾기
     private User getUser(String userId) {
         return userRepository.findById(userId)
@@ -117,10 +147,17 @@ public class FriendRequestService {
     }
     // 받은 친구 요청
     private FriendRequest getReceivedRequest(String receiverUserId, Long requestId) {
-        return friendRequestRepository.findByIdAndReceiverUserId(requestId, receiverUserId)
+        return friendRequestRepository.findReceivedRequest(requestId, receiverUserId)
                 .orElseThrow(() -> new FriendException(FriendErrorCode.REQUEST_NOT_FOUND));
     }
-    // 보류 상태 검증(이미 수락되었거나 거절된 요청)
+
+    // 보낸 친구 요청
+    private FriendRequest getSentRequest(String requesterUserId, Long requestId) {
+        return friendRequestRepository.findByIdAndRequesterUserId(requestId, requesterUserId)
+                .orElseThrow(() -> new FriendException(FriendErrorCode.REQUEST_NOT_FOUND));
+    }
+
+    // 보류 상태 검증(이미 처리된 요청)
     private void validatePending(FriendRequest friendRequest) {
         if (friendRequest.getStatus() != FriendRequestStatus.PENDING) {
             throw new FriendException(FriendErrorCode.REQUEST_ALREADY_PROCESSED);
