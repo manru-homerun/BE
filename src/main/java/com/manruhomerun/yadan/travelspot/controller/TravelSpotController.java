@@ -45,8 +45,6 @@ public class TravelSpotController {
     @Operation(summary = "여행지 검색")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행지 검색 성공", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -63,7 +61,7 @@ public class TravelSpotController {
         return ResponseEntity.ok(travelSpotService.getSpots(keyword, region, pageNumber, pageSize));
     }
 
-    @GetMapping("/{spotId}")
+    @GetMapping("/{contentId}")
     @Operation(summary = "여행지 상세 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행지 상세 조회 성공"),
@@ -74,23 +72,25 @@ public class TravelSpotController {
     })
     public ResponseEntity<TravelSpotDetailResponse> getSpotDetail(
             @Parameter(description = "외부 관광 API의 contentId", example = "2479634")
-            @PathVariable String spotId
+            @PathVariable String contentId
     ) {
-        return ResponseEntity.ok(travelSpotService.getSpotDetail(spotId));
+        return ResponseEntity.ok(travelSpotService.getSpotDetail(contentId));
     }
 
-    @GetMapping("/{spotId}/images")
+    @GetMapping("/{contentId}/images")
     @Operation(summary = "여행지 이미지 목록 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행지 이미지 목록 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "여행지를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<List<String>> getSpotImages(
             @Parameter(description = "외부 관광 API의 contentId", example = "2479634")
-            @PathVariable String spotId
+            @PathVariable String contentId
     ) {
-        return ResponseEntity.ok(travelSpotService.getSpotImages(spotId));
+        return ResponseEntity.ok(travelSpotService.getSpotImages(contentId));
     }
 
     @PostMapping("/{contentId}/dibs")
@@ -98,8 +98,6 @@ public class TravelSpotController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "여행지 찜 생성 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "사용자 식별값 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "사용자 또는 여행지를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -121,8 +119,6 @@ public class TravelSpotController {
     @Operation(summary = "여행지 찜 취소")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "여행지 찜 취소 성공"),
-            @ApiResponse(responseCode = "401", description = "사용자 식별값 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -142,8 +138,6 @@ public class TravelSpotController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행지 찜 목록 조회 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 region 요청",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "사용자 식별값 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
