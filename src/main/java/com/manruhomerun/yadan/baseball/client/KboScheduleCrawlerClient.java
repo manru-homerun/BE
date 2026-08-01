@@ -15,7 +15,7 @@ import java.util.Map;
 import com.manruhomerun.yadan.baseball.domain.enums.BaseballGameType;
 import com.manruhomerun.yadan.baseball.domain.enums.KboStadiumCode;
 import com.manruhomerun.yadan.baseball.domain.enums.KboTeamCode;
-import com.manruhomerun.yadan.baseball.properties.KboScheduleProperties;
+import com.manruhomerun.yadan.global.properties.KboScheduleProperties;
 import com.manruhomerun.yadan.global.error.exception.ExternalApiCallException;
 import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
@@ -40,6 +40,7 @@ public class KboScheduleCrawlerClient {
 
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM", Locale.ENGLISH);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd", Locale.ENGLISH);
+
     private static final String DAILY_SCHEDULE_PATH = "/Schedule/DailySchedule.aspx";
     private static final String MONTH_LABEL_ID = "cphContainer_cphContainer_cphContent_cphContent_lblGameMonth";
     private static final String NEXT_BUTTON_NAME = "ctl00$ctl00$ctl00$ctl00$cphContainer$cphContainer$cphContent$cphContent$btnNext";
@@ -59,8 +60,6 @@ public class KboScheduleCrawlerClient {
             }
 
             return parseMonthlyGames(responseBody, yearMonth);
-        } catch (ExternalApiCallException exception) {
-            throw exception;
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new ExternalApiCallException("KBO 경기 일정 호출에 실패했습니다. requestedMonth=" + yearMonth);
@@ -75,9 +74,7 @@ public class KboScheduleCrawlerClient {
         YearMonth currentMonth = extractYearMonth(document);
 
         long monthGap = ChronoUnit.MONTHS.between(currentMonth, requestedMonth);
-        if (monthGap == 0) {
-            return responseBody;
-        }
+        if (monthGap == 0) return responseBody;
 
         String buttonName = monthGap > 0 ? NEXT_BUTTON_NAME : PREVIOUS_BUTTON_NAME;
         for (long index = 0; index < Math.abs(monthGap); index++) {
@@ -95,7 +92,8 @@ public class KboScheduleCrawlerClient {
                 .header("User-Agent", "Mozilla/5.0")
                 .build();
 
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        HttpResponse<String> response = httpClient.send(request,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         return response.body();
     }
 
@@ -121,9 +119,8 @@ public class KboScheduleCrawlerClient {
 
     private void addHiddenField(Document document, Map<String, String> formData, String fieldName) {
         Element field = document.selectFirst("input[name=\"" + fieldName + "\"]");
-        if (field == null) {
-            throw new ExternalApiCallException("KBO 경기 일정 폼 필드를 찾을 수 없습니다. fieldName=" + fieldName);
-        }
+        if (field == null) throw new ExternalApiCallException(
+                "KBO 경기 일정 폼 필드를 찾을 수 없습니다. fieldName=" + fieldName);
         formData.put(fieldName, field.attr("value"));
     }
 
@@ -162,27 +159,17 @@ public class KboScheduleCrawlerClient {
 
         for (Element row : scheduleTableBody.select("tr")) {
             Element dateCell = row.selectFirst("td[title=DATE]");
-            if (dateCell != null) {
-                currentDateText = dateCell.text().trim();
-            }
+            if (dateCell != null) currentDateText = dateCell.text().trim();
 
             Element gameTypeCell = row.selectFirst("td[title=TYPE]");
-            if (gameTypeCell != null) {
-                currentGameTypeText = gameTypeCell.text().trim();
-            }
+            if (gameTypeCell != null) currentGameTypeText = gameTypeCell.text().trim();
 
-            if (currentDateText == null || currentGameTypeText == null) {
-                continue;
-            }
-
-            if (isAllStarGame(currentGameTypeText)) {
-                continue;
-            }
+            if (currentDateText == null
+                    || currentGameTypeText == null
+                    || isAllStarGame(currentGameTypeText)) continue;
 
             Elements gameCells = row.select("td[title=GAME]");
-            if (gameCells.size() < 3) {
-                continue;
-            }
+            if (gameCells.size() < 3) continue;
 
             KboTeamCode awayTeamCode = KboTeamCode.from(gameCells.get(0).text().trim());
             String scoreText = gameCells.get(1).text().trim();
@@ -191,9 +178,7 @@ public class KboScheduleCrawlerClient {
             KboStadiumCode stadiumCode = KboStadiumCode.from(getCellText(row, "td.LOCATION"));
             String etcText = getCellText(row, "td.ETC");
 
-            if (timeText.isBlank()) {
-                continue;
-            }
+            if (timeText.isBlank()) continue;
 
             if (awayTeamCode == null || homeTeamCode == null) {
                 throw new ExternalApiCallException(
@@ -247,12 +232,8 @@ public class KboScheduleCrawlerClient {
     private BaseballGameType mapGameType(String gameTypeText) {
         String normalizedGameTypeText = gameTypeText.toUpperCase(Locale.ENGLISH);
 
-        if (normalizedGameTypeText.contains("EXHIBITION")) {
-            return BaseballGameType.EXHIBITION;
-        }
-        if (normalizedGameTypeText.contains("REGULAR")) {
-            return BaseballGameType.REGULAR;
-        }
+        if (normalizedGameTypeText.contains("EXHIBITION")) return BaseballGameType.EXHIBITION;
+        if (normalizedGameTypeText.contains("REGULAR")) return BaseballGameType.REGULAR;
         return BaseballGameType.POSTSEASON;
     }
 
@@ -274,14 +255,10 @@ public class KboScheduleCrawlerClient {
     }
 
     private Integer parseScore(String scoreText, int index) {
-        if (!scoreText.contains(":")) {
-            return null;
-        }
+        if (!scoreText.contains(":")) return null;
 
         String[] tokens = scoreText.split(":");
-        if (tokens.length != 2) {
-            return null;
-        }
+        if (tokens.length != 2) return null;
 
         String score = tokens[index].trim();
         return score.isEmpty() ? null : Integer.parseInt(score);

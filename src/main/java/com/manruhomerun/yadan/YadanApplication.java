@@ -1,6 +1,6 @@
 package com.manruhomerun.yadan;
 
-import com.manruhomerun.yadan.baseball.properties.KboScheduleProperties;
+import com.manruhomerun.yadan.global.properties.KboScheduleProperties;
 import com.manruhomerun.yadan.global.properties.GlobalProperties;
 import com.manruhomerun.yadan.global.properties.TourApiProperties;
 import org.springframework.boot.SpringApplication;

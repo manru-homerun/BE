@@ -23,8 +23,12 @@ public class ExternalApiClient {
     private final TourApiProperties tourApiProperties;
     private final ObjectMapper objectMapper;
 
-    public <T extends TourApiResponse> T get(String path, Map<String, ?> queryParams, Class<T> responseType) {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(tourApiProperties.getBaseUrl())
+    public <T extends TourApiResponse> T get(
+            String path,                // uri
+            Map<String, ?> queryParams, // 쿼리 파라미터
+            Class<T> responseType       // 응답 타입
+    ) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(tourApiProperties.getBaseUrl())
                 .path(path);
 
         uriBuilder.queryParam("MobileApp", tourApiProperties.getMobileApp());
@@ -46,13 +50,10 @@ public class ExternalApiClient {
                     .uri(requestUri)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, response) -> {
-                        String errorBody = new String(response.getBody().readAllBytes());
-
-                        System.out.println("외부 API 실패 응답 body: " + errorBody);
-
                         throw new ExternalApiCallException(
-                                "외부 API 호출에 실패했습니다. path=" + path
-                                        + "\nstatus=" + response.getStatusCode()
+                                "외부 API 호출에 실패했습니다. " +
+                                "path=" + path + "\n" +
+                                "status=" + response.getStatusCode()
                         );
                     })
                     .body(String.class);
@@ -72,13 +73,11 @@ public class ExternalApiClient {
             if (!"0000".equals(response.getResultCode())) {
                 throw new ExternalApiCallException(
                         "외부 API 호출에 실패했습니다. path=" + path
-                                + "\nerrorMessage=" + response.getResultMessage()
+                        + "\nerrorMessage=" + response.getResultMessage()
                 );
             }
 
             return response;
-        } catch (ExternalApiCallException exception) {
-            throw exception;
         } catch (JsonProcessingException exception) {
             throw new ExternalApiCallException(
                     "외부 API 응답 파싱에 실패했습니다. path=" + path

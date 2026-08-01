@@ -45,7 +45,7 @@ public class TravelSpotService {
     public void createDibs(String userId, String contentId) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException());
+                .orElseThrow(UserNotFoundException::new);
 
         TravelSpot travelSpot = travelSpotRepository.findById(contentId)
                 .orElseGet(() -> {
@@ -95,7 +95,7 @@ public class TravelSpotService {
 
     public void deleteDibs(String userId, String contentId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException());
+                .orElseThrow(UserNotFoundException::new);
 
         // DELETE는 멱등적으로 처리해, 찜이 없어도 성공 응답을 반환한다.
         dibsRepository.deleteByUserIdAndTravelSpotId(userId, contentId);
@@ -104,7 +104,7 @@ public class TravelSpotService {
     @Transactional(readOnly = true)
     public List<TravelSpotDibsItemResponse> getDibs(String userId, TravelRegionCode regionCode) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException());
+                .orElseThrow(UserNotFoundException::new);
 
         // 기준 지역 코드의 뒤쪽 0을 제거한 prefix로 같은 지역 소속 여행지를 조회한다.
         String regionCodePrefix = regionCode.getCodePrefix();
