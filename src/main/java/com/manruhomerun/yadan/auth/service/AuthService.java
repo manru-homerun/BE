@@ -64,8 +64,7 @@ public class AuthService {
         }
 
         // 서비스 사용자 조회 or 생성
-        UserResolution userResolution = findOrCreateUser(provider, userInfo);
-        User user = userResolution.user();
+        User user = findOrCreateUser(provider, userInfo);
         if (Boolean.TRUE.equals(user.getIsDeleted())) {
             throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
         }
@@ -86,7 +85,7 @@ public class AuthService {
         return new LoginResponse(
                 tokenPair.accessToken(),
                 tokenPair.refreshToken(),
-                userResolution.isNewMember()
+                Boolean.TRUE.equals(user.getOnboardingCompleted())
         );
     }
 
@@ -150,7 +149,7 @@ public class AuthService {
     }
 
     // 기존 회원 찾기 or 새로운 회원 생성
-    private UserResolution findOrCreateUser(
+    private User findOrCreateUser(
             UserProvider provider,
             KakaoUserInfoResponse userInfo
     ) {
@@ -160,7 +159,6 @@ public class AuthService {
                         provider,
                         providerUserId
                 )
-                .map(user -> new UserResolution(user, false)) // 기존 사용자 존재함
                 .orElseGet(() -> { // 신규 사용자는 카카오 사용자 정보조회 응답으로 채우기
                     KakaoUserInfoResponse.Profile profile =
                             userInfo.kakaoAccount() == null
@@ -181,14 +179,7 @@ public class AuthService {
                             nickname,
                             profileImageUrl
                     );
-                    return new UserResolution(userRepository.save(user), true);
+                    return userRepository.save(user);
                 });
-    }
-
-    // 기존 회원 조회, 신규 회원 생성 결과를 담는 객체
-    private record UserResolution(
-            User user,
-            boolean isNewMember
-    ) {
     }
 }
