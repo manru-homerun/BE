@@ -39,10 +39,13 @@ public class AuthService {
 
     // 카카오 사용자 검증, user 생성, loginSession 생성, JWT 발급
     @Transactional
-    public LoginResponse login(String kakaoAccessToken) {
+    public LoginResponse login(UserProvider provider, String providerAccessToken) {
+        if (provider != UserProvider.KAKAO) {
+            throw new AuthException(AuthErrorCode.UNSUPPORTED_PROVIDER);
+        }
 
         // 카카오 엑세스 토큰 조회 (토큰 검증)
-        KakaoTokenInfoResponse tokenInfo = kakaoApiClient.getTokenInfo(kakaoAccessToken);
+        KakaoTokenInfoResponse tokenInfo = kakaoApiClient.getTokenInfo(providerAccessToken);
         if (tokenInfo == null
                 || tokenInfo.id() == null
                 || tokenInfo.appId() == null
@@ -53,7 +56,7 @@ public class AuthService {
         }
 
         // 사용자 정보 조회
-        KakaoUserInfoResponse userInfo = kakaoApiClient.getUserInfo(kakaoAccessToken);
+        KakaoUserInfoResponse userInfo = kakaoApiClient.getUserInfo(providerAccessToken);
         if (userInfo == null
                 || userInfo.id() == null
                 || !Objects.equals(tokenInfo.id(), userInfo.id())) {
@@ -61,7 +64,7 @@ public class AuthService {
         }
 
         // 서비스 사용자 조회 or 생성
-        UserResolution userResolution = findOrCreateUser(userInfo);
+        UserResolution userResolution = findOrCreateUser(provider, userInfo);
         User user = userResolution.user();
         if (Boolean.TRUE.equals(user.getIsDeleted())) {
             throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
@@ -147,11 +150,14 @@ public class AuthService {
     }
 
     // 기존 회원 찾기 or 새로운 회원 생성
-    private UserResolution findOrCreateUser(KakaoUserInfoResponse userInfo) {
+    private UserResolution findOrCreateUser(
+            UserProvider provider,
+            KakaoUserInfoResponse userInfo
+    ) {
         String providerUserId = String.valueOf(userInfo.id()); // 카카오 회원 id
 
         return userRepository.findByProviderAndProviderUserId(
-                        UserProvider.KAKAO,
+                        provider,
                         providerUserId
                 )
                 .map(user -> new UserResolution(user, false)) // 기존 사용자 존재함
@@ -170,7 +176,7 @@ public class AuthService {
                                     : profile.profileImageUrl();
 
                     User user = User.createOAuthUser(
-                            UserProvider.KAKAO,
+                            provider,
                             providerUserId,
                             nickname,
                             profileImageUrl

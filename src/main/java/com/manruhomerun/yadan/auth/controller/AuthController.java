@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.auth.dto.LoginRequest;
@@ -12,6 +13,7 @@ import com.manruhomerun.yadan.auth.dto.RefreshTokenRequest;
 import com.manruhomerun.yadan.auth.dto.RefreshTokenResponse;
 import com.manruhomerun.yadan.auth.service.AuthService;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
+import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -65,9 +67,10 @@ public class AuthController {
             )
     })
     public ResponseEntity<LoginResponse> login(
+            @RequestParam UserProvider provider,
             @Valid @RequestBody LoginRequest request
     ) {
-        return ResponseEntity.ok(authService.login(request.kakaoAccessToken()));
+        return ResponseEntity.ok(authService.login(provider, request.providerAccessToken()));
     }
 
     @PostMapping("/refresh")
