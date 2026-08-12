@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.manruhomerun.yadan.auth.dto.request.LoginRequest;
-import com.manruhomerun.yadan.auth.dto.request.RefreshTokenRequest;
-import com.manruhomerun.yadan.auth.dto.response.LoginResponse;
-import com.manruhomerun.yadan.auth.dto.response.RefreshTokenResponse;
+import com.manruhomerun.yadan.auth.dto.LoginRequest;
+import com.manruhomerun.yadan.auth.dto.LoginResponse;
+import com.manruhomerun.yadan.auth.dto.RefreshTokenRequest;
+import com.manruhomerun.yadan.auth.dto.RefreshTokenResponse;
 import com.manruhomerun.yadan.auth.service.AuthService;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 
