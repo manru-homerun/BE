@@ -16,12 +16,12 @@ public record ReceivedFriendRequestListResponse(
         long sentRequestCount,
 
         @Schema(description = "받은 친구 요청 목록")
-        List<ReceivedFriendRequestResponse> receivedRequests
+        List<FriendRequestItemResponse> receivedRequests
 ) {
     public static ReceivedFriendRequestListResponse of(
             long friendCount,
             long sentRequestCount,
-            List<ReceivedFriendRequestResponse> receivedRequests
+            List<FriendRequestItemResponse> receivedRequests
     ) {
         return new ReceivedFriendRequestListResponse(
                 friendCount,

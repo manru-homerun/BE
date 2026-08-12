@@ -9,10 +9,10 @@ import com.manruhomerun.yadan.friend.domain.entity.Friend;
 import com.manruhomerun.yadan.friend.domain.entity.FriendRequest;
 import com.manruhomerun.yadan.friend.domain.enums.FriendRequestStatus;
 import com.manruhomerun.yadan.friend.dto.FriendRequestCreateRequest;
-import com.manruhomerun.yadan.friend.dto.FriendRequestListResponse;
+import com.manruhomerun.yadan.friend.dto.FriendRequestItemResponse;
 import com.manruhomerun.yadan.friend.dto.FriendRequestResponse;
 import com.manruhomerun.yadan.friend.dto.ReceivedFriendRequestListResponse;
-import com.manruhomerun.yadan.friend.dto.ReceivedFriendRequestResponse;
+import com.manruhomerun.yadan.friend.dto.SentFriendRequestListResponse;
 import com.manruhomerun.yadan.friend.error.FriendErrorCode;
 import com.manruhomerun.yadan.friend.error.exception.FriendException;
 import com.manruhomerun.yadan.friend.repository.FriendRepository;
@@ -86,10 +86,10 @@ public class FriendRequestService {
     @Transactional(readOnly = true)
     public ReceivedFriendRequestListResponse getReceivedRequests(String receiverUserId) {
         getUser(receiverUserId);
-        List<ReceivedFriendRequestResponse> receivedRequests = friendRequestRepository
+        List<FriendRequestItemResponse> receivedRequests = friendRequestRepository
                 .findPendingReceivedRequests(receiverUserId)
                 .stream()
-                .map(ReceivedFriendRequestResponse::from)
+                .map(FriendRequestItemResponse::fromRequester)
                 .toList();
 
         long friendCount = friendRepository.countByUserId(receiverUserId);
@@ -104,15 +104,23 @@ public class FriendRequestService {
 
     // 보낸 친구 요청 목록 조회
     @Transactional(readOnly = true)
-    public FriendRequestListResponse getSentRequests(String requesterUserId) {
+    public SentFriendRequestListResponse getSentRequests(String requesterUserId) {
         getUser(requesterUserId);
-        List<FriendRequestResponse> requests = friendRequestRepository
+        List<FriendRequestItemResponse> sentRequests = friendRequestRepository
                 .findPendingSentRequests(requesterUserId)
                 .stream()
-                .map(FriendRequestResponse::from)
+                .map(FriendRequestItemResponse::fromReceiver)
                 .toList();
 
-        return FriendRequestListResponse.from(requests);
+        long friendCount = friendRepository.countByUserId(requesterUserId);
+        long receivedRequestCount =
+                friendRequestRepository.countPendingReceivedRequests(requesterUserId);
+
+        return SentFriendRequestListResponse.of(
+                friendCount,
+                receivedRequestCount,
+                sentRequests
+        );
     }
 
     // 친구 요청 수락
