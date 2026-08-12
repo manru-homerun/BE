@@ -11,6 +11,8 @@ import com.manruhomerun.yadan.friend.domain.enums.FriendRequestStatus;
 import com.manruhomerun.yadan.friend.dto.FriendRequestCreateRequest;
 import com.manruhomerun.yadan.friend.dto.FriendRequestListResponse;
 import com.manruhomerun.yadan.friend.dto.FriendRequestResponse;
+import com.manruhomerun.yadan.friend.dto.ReceivedFriendRequestListResponse;
+import com.manruhomerun.yadan.friend.dto.ReceivedFriendRequestResponse;
 import com.manruhomerun.yadan.friend.error.FriendErrorCode;
 import com.manruhomerun.yadan.friend.error.exception.FriendException;
 import com.manruhomerun.yadan.friend.repository.FriendRepository;
@@ -82,15 +84,22 @@ public class FriendRequestService {
 
     // 받은 친구 요청 목록 조회
     @Transactional(readOnly = true)
-    public FriendRequestListResponse getReceivedRequests(String receiverUserId) {
+    public ReceivedFriendRequestListResponse getReceivedRequests(String receiverUserId) {
         getUser(receiverUserId);
-        List<FriendRequestResponse> requests = friendRequestRepository
+        List<ReceivedFriendRequestResponse> receivedRequests = friendRequestRepository
                 .findPendingReceivedRequests(receiverUserId)
                 .stream()
-                .map(FriendRequestResponse::from)
+                .map(ReceivedFriendRequestResponse::from)
                 .toList();
 
-        return FriendRequestListResponse.from(requests);
+        long friendCount = friendRepository.countByUserId(receiverUserId);
+        long sentRequestCount = friendRequestRepository.countPendingSentRequests(receiverUserId);
+
+        return ReceivedFriendRequestListResponse.of(
+                friendCount,
+                sentRequestCount,
+                receivedRequests
+        );
     }
 
     // 보낸 친구 요청 목록 조회

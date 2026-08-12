@@ -44,6 +44,15 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             @Param("requesterUserId") String requesterUserId
     );
 
+    // 보낸 대기 요청 개수 조회
+    @Query("""
+            SELECT COUNT(fr)
+            FROM FriendRequest fr
+            WHERE fr.requesterUser.id = :userId
+              AND fr.status = com.manruhomerun.yadan.friend.domain.enums.FriendRequestStatus.PENDING
+            """)
+    long countPendingSentRequests(@Param("userId") String userId);
+
     // 사용자 쌍 조회
     Optional<FriendRequest> findByFirstUserIdAndSecondUserId(
             String firstUserId,
