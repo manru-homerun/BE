@@ -12,6 +12,7 @@ import com.manruhomerun.yadan.friend.domain.entity.Friend;
 public interface FriendRepository extends JpaRepository<Friend, Long> {
 
     // 친구 목록 조회
+    // TODO N+1 방지를 위해 @EntityGraph 적용 검토
     @Query("""
             SELECT f
             FROM Friend f

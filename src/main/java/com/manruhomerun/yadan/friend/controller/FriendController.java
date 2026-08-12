@@ -1,7 +1,5 @@
 package com.manruhomerun.yadan.friend.controller;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.manruhomerun.yadan.friend.dto.FriendResponse;
+import com.manruhomerun.yadan.friend.dto.FriendListResponse;
 import com.manruhomerun.yadan.friend.service.FriendService;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 
@@ -39,7 +37,7 @@ public class FriendController {
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<FriendResponse>> getFriends(HttpServletRequest httpRequest) {
+    public ResponseEntity<FriendListResponse> getFriends(HttpServletRequest httpRequest) {
 //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
         return ResponseEntity.ok(friendService.getFriends(userId));
