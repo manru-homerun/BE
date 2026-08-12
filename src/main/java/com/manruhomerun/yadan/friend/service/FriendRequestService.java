@@ -10,7 +10,6 @@ import com.manruhomerun.yadan.friend.domain.entity.FriendRequest;
 import com.manruhomerun.yadan.friend.domain.enums.FriendRequestStatus;
 import com.manruhomerun.yadan.friend.dto.FriendRequestCreateRequest;
 import com.manruhomerun.yadan.friend.dto.FriendRequestItemResponse;
-import com.manruhomerun.yadan.friend.dto.FriendRequestResponse;
 import com.manruhomerun.yadan.friend.dto.ReceivedFriendRequestListResponse;
 import com.manruhomerun.yadan.friend.dto.SentFriendRequestListResponse;
 import com.manruhomerun.yadan.friend.error.FriendErrorCode;
@@ -33,7 +32,7 @@ public class FriendRequestService {
     private final UserRepository userRepository;
 
     // 친구 요청 생성
-    public FriendRequestResponse createRequest(String requesterUserId, FriendRequestCreateRequest request) {
+    public void createRequest(String requesterUserId, FriendRequestCreateRequest request) {
         String receiverUserId = request.receiverUserId();
 
         if (requesterUserId.equals(receiverUserId)) {
@@ -61,7 +60,7 @@ public class FriendRequestService {
             throw new FriendException(FriendErrorCode.ALREADY_FRIENDS);
         }
 
-        FriendRequest friendRequest = friendRequestRepository
+        friendRequestRepository
                 .findByFirstUserIdAndSecondUserId(firstUser.getId(), secondUser.getId())
                 .map(existingRequest -> {
                     if (existingRequest.getStatus() == FriendRequestStatus.PENDING) {
@@ -78,8 +77,6 @@ public class FriendRequestService {
                                 .requesterUser(requester)
                                 .build()
                 ));
-
-        return FriendRequestResponse.from(friendRequest);
     }
 
     // 받은 친구 요청 목록 조회

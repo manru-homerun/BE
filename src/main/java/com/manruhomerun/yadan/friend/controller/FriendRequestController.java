@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.friend.dto.FriendRequestCreateRequest;
-import com.manruhomerun.yadan.friend.dto.FriendRequestResponse;
 import com.manruhomerun.yadan.friend.dto.ReceivedFriendRequestListResponse;
 import com.manruhomerun.yadan.friend.dto.SentFriendRequestListResponse;
 import com.manruhomerun.yadan.friend.service.FriendRequestService;
@@ -38,7 +37,7 @@ public class FriendRequestController {
     @PostMapping
     @Operation(summary = "친구 요청")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "친구 요청 전송 성공", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "201", description = "친구 요청 전송 성공"),
             @ApiResponse(responseCode = "400", description = "자기 자신에게 요청하거나 요청값이 올바르지 않음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
@@ -46,14 +45,14 @@ public class FriendRequestController {
             @ApiResponse(responseCode = "409", description = "이미 친구이거나 대기 중인 요청이 존재함",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<FriendRequestResponse> createRequest(
+    public ResponseEntity<Void> createRequest(
             @Valid @RequestBody FriendRequestCreateRequest request,
             HttpServletRequest httpRequest
     ) {
 //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
-        FriendRequestResponse response = friendRequestService.createRequest(userId, request);
-        return ResponseEntity.status(201).body(response);
+        friendRequestService.createRequest(userId, request);
+        return ResponseEntity.status(201).build();
     }
 
     @GetMapping("/received")
