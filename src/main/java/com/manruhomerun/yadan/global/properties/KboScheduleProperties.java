@@ -1,4 +1,4 @@
-package com.manruhomerun.yadan.baseball.properties;
+package com.manruhomerun.yadan.global.properties;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

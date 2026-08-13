@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/baseball/crawl")
-@Tag(name = "Baseball Crawling", description = "프로야구 수동 크롤링 API")
+@Tag(name = "Baseball Crawling - For Test", description = "프로야구 수동 크롤링 API")
 public class BaseballCrawlingTestController {
 
     private final BaseballGameCrawlingService baseballGameCrawlingService;
@@ -32,7 +32,7 @@ public class BaseballCrawlingTestController {
             @Parameter(description = "크롤링 종료일", example = "2026-08-31")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        baseballGameCrawlingService.syncSchedules(startDate, endDate);
+        baseballGameCrawlingService.syncGameSchedules(startDate, endDate);
         return ResponseEntity.noContent().build();
     }
 
@@ -42,7 +42,7 @@ public class BaseballCrawlingTestController {
             @Parameter(description = "결과 업데이트 대상 날짜", example = "2026-07-16")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate
     ) {
-        baseballGameCrawlingService.updateResults(targetDate);
+        baseballGameCrawlingService.updateGameResults(targetDate);
         return ResponseEntity.noContent().build();
     }
 }
