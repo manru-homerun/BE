@@ -1,0 +1,52 @@
+package com.manruhomerun.yadan.user.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.manruhomerun.yadan.global.dto.ErrorResponse;
+import com.manruhomerun.yadan.user.dto.OnboardingRequest;
+import com.manruhomerun.yadan.user.service.UserService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/users")
+@Tag(name = "User", description = "사용자 API")
+public class UserController {
+
+    private final UserService userService;
+
+    @PostMapping("/onboarding")
+    @Operation(summary = "온보딩 정보 저장")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "온보딩 정보 저장 성공"),
+            @ApiResponse(responseCode = "400", description = "요청값이 잘못되었거나 필수 약관에 동의하지 않음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자 또는 응원 구단을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "이미 온보딩을 완료함",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> onboard(
+            @Valid @RequestBody OnboardingRequest request,
+            HttpServletRequest httpRequest
+    ) {
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+        userService.onboard(userId, request);
+
+        return ResponseEntity.noContent().build();
+    }
+}
