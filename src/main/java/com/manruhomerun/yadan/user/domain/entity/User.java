@@ -90,4 +90,17 @@ public class User {
     public void preUpdate() {
         updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
+
+    public void completeOnboarding(
+            String nickname,
+            Gender gender,
+            LocalDate birthday,
+            BaseballTeam favoriteTeam
+    ) {
+        this.nickname = nickname;
+        this.gender = gender;
+        this.birthday = birthday;
+        this.favoriteTeam = favoriteTeam;
+        this.onboardingCompleted = true;
+    }
 }
