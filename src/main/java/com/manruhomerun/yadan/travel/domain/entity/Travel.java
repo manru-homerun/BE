@@ -7,6 +7,7 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -22,6 +23,18 @@ public class Travel {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "baseball_game_id")
     private BaseballGame baseballGame;
+
+    @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
+    private List<TravelTravelSpot> travelTravelSpotList;
+
+    @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
+    private List<TravelTheme> travelThemeList;
+
+    @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
+    private List<TravelUser> travelUserList;
+
+    @Column(name = "game_index", nullable = false)
+    private int gameIdx;
 
     @Column(name = "name", nullable = false)
     private String name;

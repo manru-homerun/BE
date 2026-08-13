@@ -22,4 +22,5 @@ public class Theme {
 
     @Column(name = "order", nullable = false)
     private int order;
+    // TODO: 이거 꼭 있어야 할까?
 }
