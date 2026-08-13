@@ -14,6 +14,7 @@ import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
+import com.manruhomerun.yadan.user.dto.UserProfileResponse;
 import com.manruhomerun.yadan.user.error.UserErrorCode;
 import com.manruhomerun.yadan.user.error.exception.UserException;
 import com.manruhomerun.yadan.user.repository.TravelPreferenceRepository;
@@ -82,5 +83,13 @@ public class UserService {
                 request.birthday(),
                 favoriteTeam
         );
+    }
+
+    // 나의 프로필 조회
+    public UserProfileResponse getProfile(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        return UserProfileResponse.from(user);
     }
 }
