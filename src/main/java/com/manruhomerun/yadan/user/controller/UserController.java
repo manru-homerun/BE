@@ -1,6 +1,7 @@
 package com.manruhomerun.yadan.user.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
+import com.manruhomerun.yadan.user.dto.UserProfileResponse;
 import com.manruhomerun.yadan.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,5 +50,20 @@ public class UserController {
         userService.onboard(userId, request);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me/profile")
+    @Operation(summary = "나의 프로필 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "프로필 조회 성공",
+                    content = @Content(schema = @Schema(implementation = UserProfileResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<UserProfileResponse> getProfile(HttpServletRequest httpRequest) {
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+
+        return ResponseEntity.ok(userService.getProfile(userId));
     }
 }
