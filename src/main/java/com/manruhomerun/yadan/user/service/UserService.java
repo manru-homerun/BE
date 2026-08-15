@@ -15,6 +15,7 @@ import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
 import com.manruhomerun.yadan.user.dto.UserProfileResponse;
+import com.manruhomerun.yadan.user.dto.UserProfileUpdateRequest;
 import com.manruhomerun.yadan.user.error.UserErrorCode;
 import com.manruhomerun.yadan.user.error.exception.UserException;
 import com.manruhomerun.yadan.user.repository.TravelPreferenceRepository;
@@ -41,6 +42,10 @@ public class UserService {
 
         if (Boolean.TRUE.equals(user.getOnboardingCompleted())) {
             throw new UserException(UserErrorCode.ONBOARDING_ALREADY_COMPLETED);
+        }
+
+        if (userRepository.existsByNicknameAndIdNot(request.nickname(), userId)) {
+            throw new UserException(UserErrorCode.NICKNAME_ALREADY_EXISTS);
         }
 
         if (!Boolean.TRUE.equals(request.agreements().serviceTerms())
@@ -89,6 +94,33 @@ public class UserService {
     public UserProfileResponse getProfile(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+
+        return UserProfileResponse.from(user);
+    }
+
+    // 나의 프로필 수정
+    @Transactional
+    public UserProfileResponse updateProfile(String userId, UserProfileUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (userRepository.existsByNicknameAndIdNot(request.nickname(), userId)) {
+            throw new UserException(UserErrorCode.NICKNAME_ALREADY_EXISTS);
+        }
+
+        BaseballTeam favoriteTeam = baseballTeamRepository.findById(request.favoriteTeamId())
+                .orElseThrow(() -> new BaseballResourceNotFoundException(
+                        BaseballErrorCode.BASEBALL_TEAM_NOT_FOUND,
+                        "팀을 찾을 수 없습니다. teamId=" + request.favoriteTeamId()
+                ));
+
+        user.updateProfile(
+                request.profileImageUrl(),
+                request.nickname(),
+                favoriteTeam,
+                request.birthday(),
+                request.gender()
+        );
 
         return UserProfileResponse.from(user);
     }
