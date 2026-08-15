@@ -1,14 +1,19 @@
 package com.manruhomerun.yadan.travel.controller;
 
+import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
 import com.manruhomerun.yadan.travel.dto.TravelCreateRequest;
 import com.manruhomerun.yadan.travel.dto.TravelDetailResponse;
+import com.manruhomerun.yadan.travel.dto.TravelListResponse;
 import com.manruhomerun.yadan.travel.service.TravelService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/travel")
@@ -37,14 +42,18 @@ public class TravelController {
 
     // 여행 목록 조회
     @GetMapping
-    public ResponseEntity<?> getTravelList(
+    public ResponseEntity<PageResponse<TravelListResponse>> getTravelList(
             HttpServletRequest httpServletRequest,
             @RequestParam(required = false)
-            TravelStatus status
+            TravelStatus status,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "pageNumber는 1 이상이어야 합니다.")
+            int pageNumber,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "pageSize는 1 이상이어야 합니다.")
+            int pageSize
     ){
         //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
-        return ResponseEntity.ok(travelService.getTravelList(userId, status));
+        return ResponseEntity.ok(travelService.getTravelList(userId, status, pageNumber, pageSize));
     }
 
     // 특정 여행 조회

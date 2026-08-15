@@ -4,12 +4,14 @@ import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
 import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
 import com.manruhomerun.yadan.baseball.error.exception.BaseballGameNotFoundException;
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
+import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travel.domain.entity.*;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
 import com.manruhomerun.yadan.travel.dto.TravelCreateRequest;
 import com.manruhomerun.yadan.travel.dto.ThemeListResponse;
 import com.manruhomerun.yadan.travel.dto.TravelDetailResponse;
+import com.manruhomerun.yadan.travel.dto.TravelListResponse;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
 import com.manruhomerun.yadan.travel.repository.*;
@@ -18,6 +20,10 @@ import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -104,25 +110,46 @@ public class TravelService {
 
     }
 
-    public List<TravelDetailResponse> getTravelList(String userId, TravelStatus status) {
+    public PageResponse<TravelListResponse> getTravelList(String userId, TravelStatus status, int pageNumber, int pageSize) {
         userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        return travelUserRepository.findAllByUserId(userId)
-                .stream()
+        int validatedPageNumber = Math.max(pageNumber, 1);
+        int validatedPageSize = Math.max(pageSize, 1);
+        PageRequest pageRequest = PageRequest.of(
+                validatedPageNumber - 1,
+                validatedPageSize,
+                Sort.by(Sort.Order.desc("travel.startDate"), Sort.Order.desc("travel.id"))
+        );
+
+        if (status == null) {
+            Page<TravelUser> page = travelUserRepository.findAllByUserId(userId, pageRequest);
+            List<TravelListResponse> contents = page.getContent().stream()
+                    .map(TravelUser::getTravel)
+                    .map(travel -> TravelListResponse.from(travel, userId))
+                    .toList();
+
+            return PageResponse.from(page, contents);
+        }
+
+        List<TravelListResponse> filteredTravels = travelUserRepository.findAllByUserId(userId).stream()
                 .map(TravelUser::getTravel)
-                .filter(travel -> {
-                    if (status == null) {
-                        return true;
-                    }
-                    return switch (status) {
-                        case PLANNING -> travel.getStartDate().isAfter(today);
-                        case IN_PROGRESS -> !travel.getStartDate().isAfter(today)
-                                && !travel.getEndDate().isBefore(today);
-                        case COMPLETED -> travel.getEndDate().isBefore(today);
-                    };
+                .filter(travel -> switch (status) {
+                    case PLANNING -> travel.getStartDate().isAfter(today);
+                    case IN_PROGRESS -> !travel.getStartDate().isAfter(today)
+                            && !travel.getEndDate().isBefore(today);
+                    case COMPLETED -> travel.getEndDate().isBefore(today);
                 })
-                .map(TravelDetailResponse::from)
+                .sorted(Comparator.comparing(Travel::getStartDate).reversed()
+                        .thenComparing(Travel::getId, Comparator.reverseOrder()))
+                .map(travel -> TravelListResponse.from(travel, userId))
                 .toList();
+
+        int start = Math.min((validatedPageNumber - 1) * pageRequest.getPageSize(), filteredTravels.size());
+        int end = Math.min(start + pageRequest.getPageSize(), filteredTravels.size());
+        List<TravelListResponse> contents = filteredTravels.subList(start, end);
+        PageImpl<TravelListResponse> page = new PageImpl<>(contents, pageRequest, filteredTravels.size());
+
+        return PageResponse.from(page, contents);
     }
 
     public TravelDetailResponse getTravelById(String travelId) {
