@@ -16,7 +16,6 @@ import com.manruhomerun.yadan.travel.repository.*;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
-import com.manruhomerun.yadan.travelspot.service.TravelSpotService;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -37,7 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Transactional
 @RequiredArgsConstructor
 public class TravelService {
-    // repository
     private final BaseballGameRepository baseballGameRepository;
     private final TravelRepository travelRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
@@ -48,8 +46,7 @@ public class TravelService {
     private final TravelSpotRepository travelSpotRepository;
     private final ExternalApiClient externalApiClient;
 
-    // service
-    private final TravelSpotService travelSpotService;
+    //private final TravelSpotService travelSpotService;
 
     public TravelSpot getTravelSpotById(String travelSpotId) {
         TravelSpot travelSpot = travelSpotRepository.findById(travelSpotId)
@@ -229,7 +226,7 @@ public class TravelService {
         List<Theme> themes = themeRepository.findAll();
         Collections.sort(themes, Comparator.comparingInt(Theme::getOrder));
         return themes.stream()
-                .map(theme -> ThemeListResponse.from(theme))
+                .map(ThemeListResponse::from)
                 .toList();
     }
 }

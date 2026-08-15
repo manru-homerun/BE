@@ -31,5 +31,4 @@ public class TravelTravelSpot {
 
     @Column(name = "placement_order", nullable = false)
     private int order;
-
 }
