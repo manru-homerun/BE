@@ -50,7 +50,7 @@ public class TravelSpotController {
     })
     public ResponseEntity<PageResponse<TravelSpotSearchItemResponse>> getSpots(
             @Parameter(description = "검색어", example = "시장", required = true)
-            @RequestParam @NotBlank(message = "keyword는 필수입니다.") String keyword,
+            @RequestParam @NotBlank(message = "keyword는 필수입니다.") String searchKeyword,
             @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
             @RequestParam TravelRegionCode region,
             @Parameter(description = "페이지 번호", example = "1")
@@ -58,7 +58,7 @@ public class TravelSpotController {
             @Parameter(description = "페이지 크기", example = "10")
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "pageSize는 1 이상이어야 합니다.") int pageSize
     ) {
-        return ResponseEntity.ok(travelSpotService.getSpots(keyword, region, pageNumber, pageSize));
+        return ResponseEntity.ok(travelSpotService.getSpots(searchKeyword, region, pageNumber, pageSize));
     }
 
     @GetMapping("/{contentId}")
