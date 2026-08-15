@@ -22,6 +22,11 @@ public enum UserErrorCode implements BaseErrorCode {
             "USER_TRAVEL_REGION_400_INVALID",
             "지원하지 않는 여행 지역입니다.",
             400
+    ),
+    TRAVEL_PREFERENCE_NOT_FOUND(
+            "USER_TRAVEL_PREFERENCE_404_NOT_FOUND",
+            "여행 취향 정보를 찾을 수 없습니다.",
+            404
     );
 
     private final String code;
