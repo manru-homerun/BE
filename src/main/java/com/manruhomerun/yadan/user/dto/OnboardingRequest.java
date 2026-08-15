@@ -3,7 +3,7 @@ package com.manruhomerun.yadan.user.dto;
 import java.time.LocalDate;
 import java.util.Set;
 
-import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.PreferredTravelRegionCode;
 import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.domain.enums.Gender;
@@ -53,7 +53,7 @@ public record OnboardingRequest(
         @Max(value = 7, message = "여행 스타일 값은 7 이하여야 합니다.")
         Integer travelStyleValue,
 
-        @Schema(description = "사용자가 선택한 선호 여행 지역 이름 목록", example = "[\"부산\", \"창원\"]")
+        @Schema(description = "사용자가 선택한 선호 여행 지역 이름 목록", example = "[\"부산\", \"제주\"]")
         @NotEmpty(message = "선호 여행 지역은 한 개 이상 선택해야 합니다.")
         Set<@NotBlank(message = "선호 여행 지역 이름은 비어 있을 수 없습니다.") String> preferredRegions
 
@@ -67,8 +67,8 @@ public record OnboardingRequest(
 
     public TravelPreference toEntity(
             User user,
-            TravelRegionCode residenceRegionCode,
-            Set<TravelRegionCode> preferredRegionCodes
+            PreferredTravelRegionCode residenceRegionCode,
+            Set<PreferredTravelRegionCode> preferredRegionCodes
     ) {
         return TravelPreference.builder()
                 .user(user)

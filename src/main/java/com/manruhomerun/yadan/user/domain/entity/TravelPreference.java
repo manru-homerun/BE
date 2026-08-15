@@ -5,8 +5,8 @@ import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
-import com.manruhomerun.yadan.user.domain.converter.TravelRegionCodeConverter;
+import com.manruhomerun.yadan.travelspot.domain.enums.PreferredTravelRegionCode;
+import com.manruhomerun.yadan.user.domain.converter.PreferredTravelRegionCodeConverter;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -47,9 +47,9 @@ public class TravelPreference {
     @Column(name = "travel_style_value", nullable = false)
     private Integer travelStyleValue;
 
-    @Convert(converter = TravelRegionCodeConverter.class)
+    @Convert(converter = PreferredTravelRegionCodeConverter.class)
     @Column(name = "residence_region_code", nullable = false, length = 5)
-    private TravelRegionCode residenceRegionCode;
+    private PreferredTravelRegionCode residenceRegionCode;
 
     // 선호 지역 enum 목록의 각 값을 travel_preferred_region 테이블의 개별 행으로 저장
     @Builder.Default
@@ -61,9 +61,9 @@ public class TravelPreference {
                     columnNames = {"travel_preference_id", "region_code"}
             )
     )
-    @Convert(converter = TravelRegionCodeConverter.class)
+    @Convert(converter = PreferredTravelRegionCodeConverter.class)
     @Column(name = "region_code", nullable = false, length = 5)
-    private Set<TravelRegionCode> preferredRegionCodes = new HashSet<>();
+    private Set<PreferredTravelRegionCode> preferredRegionCodes = new HashSet<>();
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

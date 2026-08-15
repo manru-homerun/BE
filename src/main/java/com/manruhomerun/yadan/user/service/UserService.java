@@ -11,7 +11,7 @@ import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
 import com.manruhomerun.yadan.baseball.error.exception.BaseballResourceNotFoundException;
 import com.manruhomerun.yadan.baseball.repository.BaseballTeamRepository;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
-import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.PreferredTravelRegionCode;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
 import com.manruhomerun.yadan.user.dto.UserProfileResponse;
@@ -59,14 +59,14 @@ public class UserService {
                         "팀을 찾을 수 없습니다. teamId=" + request.favoriteTeamId()
                 ));
 
-        TravelRegionCode residenceRegionCode;
-        Set<TravelRegionCode> preferredRegionCodes = new HashSet<>();
+        PreferredTravelRegionCode residenceRegionCode;
+        Set<PreferredTravelRegionCode> preferredRegionCodes = new HashSet<>();
 
         try {
-            residenceRegionCode = TravelRegionCode.fromCityName(request.residenceRegion());
+            residenceRegionCode = PreferredTravelRegionCode.fromRegionName(request.residenceRegion());
 
             for (String preferredRegion : request.preferredRegions()) {
-                preferredRegionCodes.add(TravelRegionCode.fromCityName(preferredRegion));
+                preferredRegionCodes.add(PreferredTravelRegionCode.fromRegionName(preferredRegion));
             }
         } catch (IllegalArgumentException exception) {
             throw new UserException(
