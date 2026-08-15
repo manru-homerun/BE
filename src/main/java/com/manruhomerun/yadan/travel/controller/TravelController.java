@@ -1,5 +1,6 @@
 package com.manruhomerun.yadan.travel.controller;
 
+import com.manruhomerun.yadan.travel.dto.TravelCreateRequest;
 import com.manruhomerun.yadan.travel.dto.TravelDetailResponse;
 import com.manruhomerun.yadan.travel.service.TravelService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +16,12 @@ public class TravelController {
 
     // 여행 코스 최초 저장
     @PostMapping
-    public ResponseEntity<?> createTravel(){
+    public ResponseEntity<Void> createTravel(
+            @RequestBody TravelCreateRequest request
+    ){
+        //        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        travelService.createTravel(userId, request);
         return ResponseEntity.ok().build();
     }
 

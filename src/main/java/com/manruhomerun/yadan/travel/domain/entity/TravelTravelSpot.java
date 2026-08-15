@@ -29,7 +29,7 @@ public class TravelTravelSpot {
     @Column(name = "day", nullable = false)
     private int day;
 
-    @Column(name = "order", nullable = false)
+    @Column(name = "placement_order", nullable = false)
     private int order;
 
 }

@@ -1,6 +1,7 @@
 package com.manruhomerun.yadan.travelspot.service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -229,4 +230,39 @@ public class TravelSpotService {
                 content
         );
     }
+
+    public List<TravelSpot> getTravelSpotListByIds(List<String> travelSpotIds) {
+        List<TravelSpot> travelSpots = new ArrayList<>();
+
+        for(String travelSpotId : travelSpotIds) {
+            TravelSpot travelSpot = travelSpotRepository.findById(travelSpotId)
+                    .orElseGet(() -> {
+                        Map<String, Object> queryParams = new LinkedHashMap<>();
+                        queryParams.put("contentId", travelSpotId);
+                        TourApiDetailCommonResponse response = externalApiClient.get(
+                                "/detailCommon2",
+                                queryParams,
+                                TourApiDetailCommonResponse.class
+                        );
+
+                        TourApiDetailCommonResponse.Item item = response.response().body().items().item().getFirst();
+
+                        // 외부 API 응답을 현재 travel_spot 스키마에 맞춰 저장한다.
+                        return travelSpotRepository.save(
+                                TravelSpot.builder()
+                                        .id(item.contentid())
+                                        .name(item.title())
+                                        .latitude(new BigDecimal(item.mapy()))
+                                        .longitude(new BigDecimal(item.mapx()))
+                                        .regionCode(item.lDongRegnCd() + item.lDongSignguCd())
+                                        .category(Integer.valueOf(item.contenttypeid()))
+                                        .image(item.firstimage() == null || item.firstimage().isBlank() ? null : item.firstimage())
+                                        .build()
+                        );
+                    });
+            travelSpots.add(travelSpot);
+        }
+        return travelSpotRepository.findAllById(travelSpotIds);
+    }
+
 }

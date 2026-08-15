@@ -20,7 +20,7 @@ public class Theme {
     @Column(name = "code", nullable = false)
     private String code;
 
-    @Column(name = "order", nullable = false)
+    @Column(name = "placement_order", nullable = false)
     private int order;
     // TODO: 이거 꼭 있어야 할까?
 }
