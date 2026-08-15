@@ -103,4 +103,18 @@ public class User {
         this.favoriteTeam = favoriteTeam;
         this.onboardingCompleted = true;
     }
+
+    public void updateProfile(
+            String profileImageUrl,
+            String nickname,
+            BaseballTeam favoriteTeam,
+            LocalDate birthday,
+            Gender gender
+    ) {
+        this.profileImageUrl = profileImageUrl;
+        this.nickname = nickname;
+        this.favoriteTeam = favoriteTeam;
+        this.birthday = birthday;
+        this.gender = gender;
+    }
 }
