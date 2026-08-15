@@ -12,8 +12,10 @@ import com.manruhomerun.yadan.baseball.error.exception.BaseballResourceNotFoundE
 import com.manruhomerun.yadan.baseball.repository.BaseballTeamRepository;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travelspot.domain.enums.PreferredTravelRegionCode;
+import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
+import com.manruhomerun.yadan.user.dto.TravelPreferenceResponse;
 import com.manruhomerun.yadan.user.dto.UserProfileResponse;
 import com.manruhomerun.yadan.user.dto.UserProfileUpdateRequest;
 import com.manruhomerun.yadan.user.error.UserErrorCode;
@@ -96,6 +98,19 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         return UserProfileResponse.from(user);
+    }
+
+    // 나의 여행 취향 정보 조회
+    public TravelPreferenceResponse getPreference(String userId) {
+        userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserException(
+                        UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND
+                ));
+
+        return TravelPreferenceResponse.from(travelPreference);
     }
 
     // 나의 프로필 수정
