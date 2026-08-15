@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +31,13 @@ import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "user")
+@Table(
+        name = "user",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_user_nickname",
+                columnNames = "nickname"
+        )
+)
 public class User {
 
     @Id
