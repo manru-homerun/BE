@@ -3,10 +3,10 @@ package com.manruhomerun.yadan.user.dto;
 import java.time.LocalDate;
 import java.util.Set;
 
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.domain.enums.Gender;
-import com.manruhomerun.yadan.user.domain.enums.TravelRegionCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -27,7 +27,7 @@ public record OnboardingRequest(
 
         @Schema(description = "사용자가 설정한 닉네임", example = "야구여행자")
         @NotBlank(message = "닉네임은 필수입니다.")
-        @Size(max = 12, message = "닉네임은 12자 이하여야 합니다.")
+        @Size(min = 2, max = 12, message = "닉네임은 2자 이상 12자 이하여야 합니다.")
         String nickname,
 
         @Schema(description = "성별", example = "MALE")
@@ -58,6 +58,12 @@ public record OnboardingRequest(
         Set<@NotBlank(message = "선호 여행 지역 이름은 비어 있을 수 없습니다.") String> preferredRegions
 
 ) {
+
+    public OnboardingRequest {
+        if (nickname != null) {
+            nickname = nickname.strip();
+        }
+    }
 
     public TravelPreference toEntity(
             User user,

@@ -1,6 +1,6 @@
 package com.manruhomerun.yadan.user.domain.converter;
 
-import com.manruhomerun.yadan.user.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

@@ -5,8 +5,8 @@ import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.user.domain.converter.TravelRegionCodeConverter;
-import com.manruhomerun.yadan.user.domain.enums.TravelRegionCode;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
