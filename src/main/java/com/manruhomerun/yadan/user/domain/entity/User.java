@@ -55,7 +55,7 @@ public class User {
     @Column(name = "provider_user_id", nullable = false, length = 255)
     private String providerUserId;
 
-    @Column(length = 12)
+    @Column(length = 12, columnDefinition = "varchar(12) collate utf8mb4_bin")
     private String nickname;
 
     @Column(name = "profile_image_url", length = 255)
