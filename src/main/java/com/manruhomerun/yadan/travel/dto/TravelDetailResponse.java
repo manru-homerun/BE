@@ -23,7 +23,7 @@ public record TravelDetailResponse(
         String regionCode,
         List<String> friends,
         boolean isLeader,
-        List<Long> theme,
+        List<String> theme,
         List<ScheduleResponse> schedule
 ) {
 
@@ -43,10 +43,10 @@ public record TravelDetailResponse(
         boolean isLeader = safeTravelUsers.stream()
                 .anyMatch(TravelUser::isLeader);
 
-        List<Long> theme = safeTravelThemes.stream()
+        List<String> theme = safeTravelThemes.stream()
                 .map(TravelTheme::getTheme)
                 .filter(Objects::nonNull)
-                .map(Theme::getId)
+                .map(Theme::getName)
                 .toList();
 
         // day와 order 기준으로 정렬한 뒤 일차별 여행지 목록으로 묶는다.

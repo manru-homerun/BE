@@ -6,6 +6,7 @@ import com.manruhomerun.yadan.baseball.error.exception.BaseballGameNotFoundExcep
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travel.domain.entity.*;
+import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
 import com.manruhomerun.yadan.travel.dto.TravelCreateRequest;
 import com.manruhomerun.yadan.travel.dto.ThemeListResponse;
 import com.manruhomerun.yadan.travel.dto.TravelDetailResponse;
@@ -19,20 +20,25 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class TravelService {
+    // repository
     private final BaseballGameRepository baseballGameRepository;
     private final TravelRepository travelRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
     private final TravelUserRepository travelUserRepository;
     private final TravelThemeRepository travelThemeRepository;
-    private final TravelSpotService travelSpotService;
     private final ThemeRepository themeRepository;
     private final UserRepository userRepository;
+
+    // service
+    private final TravelSpotService travelSpotService;
 
     public void createTravel(String userId, TravelCreateRequest request) {
         Long baseballGameId = request.baseballGame().id();
@@ -40,9 +46,8 @@ public class TravelService {
                 () -> new BaseballGameNotFoundException(BaseballErrorCode.BASEBALL_GAME_NOT_FOUND, "야구 경기를 찾을 수 없습니다. baseballGameId=" + baseballGameId)
         );
 
-        User leader = userRepository.findById(userId).orElseThrow(
-                () -> new NoSuchElementException("사용자가 존재하지 않습니다.")
-        ); // TODO: UserNotFoundException으로 바꾸기
+        // TODO: UserNotFoundException으로 바꾸기? 암튼 확인해봐야 함
+        User leader = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
         Travel travel = Travel.builder()
                 .startDate(request.from())
@@ -62,10 +67,9 @@ public class TravelService {
                                 .user(user)
                                 .build()
                 )
-                .forEach(
-                        travelUser -> travelUserRepository.save(travelUser)
-                );
+                .forEach(travelUserRepository::save);
 
+        // 방장인 사용자와의 연관관계 저장
         travelUserRepository.save(TravelUser.builder()
                 .travel(travel)
                 .user(leader)
@@ -79,9 +83,7 @@ public class TravelService {
                         .travel(travel)
                         .theme(theme)
                         .build()
-        ).forEach(
-                travelTheme -> travelThemeRepository.save(travelTheme)
-        );
+        ).forEach(travelThemeRepository::save);
 
         // 관광지와의 연관관계 저장
         for(TravelCreateRequest.ScheduleRequest schedule : request.schedule()) {
@@ -94,9 +96,7 @@ public class TravelService {
                                     .day(schedule.day())
                                     .build()
                     )
-                    .forEach(
-                            travelTravelSpot ->
-                                    travelTravelSpotRepository.save(travelTravelSpot));
+                    .forEach(travelTravelSpotRepository::save);
         }
     }
 
@@ -104,15 +104,23 @@ public class TravelService {
 
     }
 
-    public List<TravelDetailResponse> getTravelList(String userId) {
-        userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-        List<Travel> travelList = travelUserRepository.findAllByUserId(userId)
+    public List<TravelDetailResponse> getTravelList(String userId, TravelStatus status) {
+        userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        return travelUserRepository.findAllByUserId(userId)
                 .stream()
                 .map(TravelUser::getTravel)
-                .toList();
-
-        return travelList.stream()
+                .filter(travel -> {
+                    if (status == null) {
+                        return true;
+                    }
+                    return switch (status) {
+                        case PLANNING -> travel.getStartDate().isAfter(today);
+                        case IN_PROGRESS -> !travel.getStartDate().isAfter(today)
+                                && !travel.getEndDate().isBefore(today);
+                        case COMPLETED -> travel.getEndDate().isBefore(today);
+                    };
+                })
                 .map(TravelDetailResponse::from)
                 .toList();
     }
