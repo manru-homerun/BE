@@ -33,9 +33,11 @@ public class Travel {
     @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
     private List<TravelUser> travelUserList;
 
+    @Setter
     @Column(name = "game_index", nullable = false)
     private int gameIdx;
 
+    @Setter
     @Column(name = "name", nullable = false)
     private String name;
 

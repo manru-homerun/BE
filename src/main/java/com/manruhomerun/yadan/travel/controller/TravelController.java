@@ -5,6 +5,7 @@ import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
 import com.manruhomerun.yadan.travel.dto.TravelCreateRequest;
 import com.manruhomerun.yadan.travel.dto.TravelDetailResponse;
 import com.manruhomerun.yadan.travel.dto.TravelListResponse;
+import com.manruhomerun.yadan.travel.dto.TravelModifyRequest;
 import com.manruhomerun.yadan.travel.service.TravelService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Min;
@@ -28,16 +29,21 @@ public class TravelController {
         //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
         travelService.createTravel(userId, request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.notFound().build();
     }
 
     // 특정 여행 수정
     @PutMapping("/{travelId}")
     public ResponseEntity<?> modifyTravel(
             @PathVariable
-            String travelId
+            String travelId,
+            @RequestBody TravelModifyRequest request
     ){
-        return ResponseEntity.ok().build();
+        //        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+
+        travelService.updateTravel(travelId, userId, request);
+        return ResponseEntity.noContent().build();
     }
 
     // 여행 목록 조회

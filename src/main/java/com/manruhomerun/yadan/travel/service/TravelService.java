@@ -8,10 +8,7 @@ import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travel.domain.entity.*;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
-import com.manruhomerun.yadan.travel.dto.TravelCreateRequest;
-import com.manruhomerun.yadan.travel.dto.ThemeListResponse;
-import com.manruhomerun.yadan.travel.dto.TravelDetailResponse;
-import com.manruhomerun.yadan.travel.dto.TravelListResponse;
+import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
 import com.manruhomerun.yadan.travel.repository.*;
@@ -29,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Transactional
@@ -94,20 +92,51 @@ public class TravelService {
         // 관광지와의 연관관계 저장
         for(TravelCreateRequest.ScheduleRequest schedule : request.schedule()) {
             List<String> travelSpotIds = schedule.travelSpotIdList();
+            AtomicInteger order = new AtomicInteger(1);
+            // TODO: 여행지 순서 반영되도록 수정
             travelSpotService.getTravelSpotListByIds(travelSpotIds)
                     .stream().map(
                             travelSpot -> TravelTravelSpot.builder()
                                     .travel(travel)
                                     .travelSpot(travelSpot)
                                     .day(schedule.day())
+                                    .order(order.getAndIncrement())
                                     .build()
                     )
                     .forEach(travelTravelSpotRepository::save);
         }
     }
 
-    public void updateTravel() {
+    public void updateTravel(String travelId, String userId, TravelModifyRequest request) {
+        Travel travel = travelRepository.findById(travelId).orElseThrow(
+                () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
+        TravelUser travelUser = travelUserRepository.findByTravelIdAndUserId(travelId, userId)
+                .orElseThrow(UserNotFoundException::new);
 
+        if (!travelUser.isLeader()) {
+            throw new IllegalArgumentException("여행 수정 권한이 없습니다. userId=" + userId);
+        }
+
+        // 여행 정보 수정
+        travel.setName(request.name());
+        travel.setGameIdx(request.gameIdx());
+
+        travelTravelSpotRepository.deleteTravelTravelSpotsByTravel(travel);
+        for (TravelModifyRequest.ScheduleRequest schedule : request.schedule()) {
+            List<String> travelSpotIds = schedule.travelSpotIdList();
+            AtomicInteger order = new AtomicInteger(1);
+            // TODO: 여행지 순서 반영되도록 수정
+            travelSpotService.getTravelSpotListByIds(travelSpotIds)
+                    .stream().map(
+                            travelSpot -> TravelTravelSpot.builder()
+                                    .travel(travel)
+                                    .travelSpot(travelSpot)
+                                    .day(schedule.day())
+                                    .order(order.getAndIncrement())
+                                    .build()
+                    )
+                    .forEach(travelTravelSpotRepository::save);
+        }
     }
 
     public PageResponse<TravelListResponse> getTravelList(String userId, TravelStatus status, int pageNumber, int pageSize) {
