@@ -22,6 +22,8 @@ public record TravelSpotDetailResponse(
         @Schema(description = "위도", example = "37.4673918780", nullable = true)
         String latitude,
         @Schema(description = "개요", nullable = true)
-        String overview
+        String overview,
+        @Schema(description = "찜 여부", nullable = false)
+        Boolean dibs
 ) {
 }

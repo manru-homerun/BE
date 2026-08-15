@@ -74,7 +74,9 @@ public class TravelSpotController {
             @Parameter(description = "외부 관광 API의 contentId", example = "2479634")
             @PathVariable String contentId
     ) {
-        return ResponseEntity.ok(travelSpotService.getSpotDetail(contentId));
+        //        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        return ResponseEntity.ok(travelSpotService.getSpotDetail(contentId, userId));
     }
 
     @GetMapping("/{contentId}/images")

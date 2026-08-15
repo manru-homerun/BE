@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record TravelListResponse(
+        String id,
         LocalDate from,
         LocalDate to,
         String name,
@@ -30,6 +31,7 @@ public record TravelListResponse(
                                 && travelUser.isLeader()
                 );
         return new TravelListResponse(
+                travel.getId(),
                 travel.getStartDate(),
                 travel.getEndDate(),
                 travel.getName(),
