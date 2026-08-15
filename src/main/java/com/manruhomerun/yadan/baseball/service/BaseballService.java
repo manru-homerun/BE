@@ -85,7 +85,6 @@ public class BaseballService {
 
         Page<BaseballGame> page = baseballGameRepository.findUpcomingGamesByTeamId(
                 teamId,
-                teamId,
                 (baselineDate == null ? LocalDate.now() : baselineDate).atStartOfDay(),
                 pageRequest
         );

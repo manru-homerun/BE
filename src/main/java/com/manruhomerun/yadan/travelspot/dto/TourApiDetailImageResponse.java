@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record TourApiDetailCommonResponse(
+public record TourApiDetailImageResponse(
         Response response
 ) implements TourApiResponse {
 
@@ -55,19 +55,7 @@ public record TourApiDetailCommonResponse(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Item(
-            String contentid,
-            String contenttypeid,
-            String title,
-            String tel,
-            String homepage,
-            String firstimage,
-            String lDongRegnCd,
-            String lDongSignguCd,
-            String addr1,
-            String addr2,
-            String mapx,
-            String mapy,
-            String overview
+            String originimgurl
     ) {
     }
 }
