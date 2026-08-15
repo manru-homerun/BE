@@ -8,6 +8,11 @@ public enum UserErrorCode implements BaseErrorCode {
             "이미 온보딩을 완료했습니다.",
             409
     ),
+    NICKNAME_ALREADY_EXISTS(
+            "USER_NICKNAME_409_ALREADY_EXISTS",
+            "이미 사용 중인 닉네임입니다.",
+            409
+    ),
     REQUIRED_AGREEMENT_NOT_ACCEPTED(
             "USER_AGREEMENT_400_REQUIRED_NOT_ACCEPTED",
             "필수 약관에 동의해야 합니다.",
