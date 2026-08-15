@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
+import com.manruhomerun.yadan.user.dto.TravelPreferenceResponse;
 import com.manruhomerun.yadan.user.dto.UserProfileResponse;
 import com.manruhomerun.yadan.user.dto.UserProfileUpdateRequest;
 import com.manruhomerun.yadan.user.service.UserService;
@@ -67,6 +68,21 @@ public class UserController {
         String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
 
         return ResponseEntity.ok(userService.getProfile(userId));
+    }
+
+    @GetMapping("/me/preference")
+    @Operation(summary = "나의 여행 취향 정보 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "여행 취향 정보 조회 성공",
+                    content = @Content(schema = @Schema(implementation = TravelPreferenceResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자 또는 여행 취향 정보를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<TravelPreferenceResponse> getPreference(HttpServletRequest httpRequest) {
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+
+        return ResponseEntity.ok(userService.getPreference(userId));
     }
 
     @PutMapping("/me/profile")
