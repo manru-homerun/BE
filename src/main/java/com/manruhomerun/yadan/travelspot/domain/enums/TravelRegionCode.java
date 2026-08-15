@@ -18,6 +18,10 @@ public enum TravelRegionCode {
         this.cityName = cityName;
     }
 
+    public String getCode() {
+        return code;
+    }
+
     public String getCodePrefix() {
         return code.replaceFirst("0+$", "");
     }

@@ -5,7 +5,7 @@ import lombok.Getter;
 public enum TravelSpotCategory {
     TOURIST_ATTRACTION(12, "관광지"),
     CULTURAL_FACILITY(14, "문화시설"),
-    FESTIVAL_PERFORMANCE_EVENT(15, "축제공연행사"),
+    FESTIVAL_PERFORMANCE_EVENT(15, "축제/공연/행사"),
     TRAVEL_COURSE(25, "여행코스"),
     LEPORTS(28, "레포츠"),
     ACCOMMODATION(32, "숙박"),

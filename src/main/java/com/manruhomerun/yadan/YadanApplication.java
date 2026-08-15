@@ -1,12 +1,16 @@
 package com.manruhomerun.yadan;
 
+import com.manruhomerun.yadan.global.properties.KboScheduleProperties;
+import com.manruhomerun.yadan.global.properties.GlobalProperties;
 import com.manruhomerun.yadan.global.properties.TourApiProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableConfigurationProperties({TourApiProperties.class})
+@EnableScheduling
+@EnableConfigurationProperties({TourApiProperties.class, KboScheduleProperties.class, GlobalProperties.class})
 public class YadanApplication {
 
 	public static void main(String[] args) {
