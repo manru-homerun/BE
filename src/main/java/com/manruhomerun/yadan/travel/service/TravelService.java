@@ -4,6 +4,7 @@ import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
 import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
 import com.manruhomerun.yadan.baseball.error.exception.BaseballGameNotFoundException;
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
+import com.manruhomerun.yadan.global.client.ExternalApiClient;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travel.domain.entity.*;
@@ -12,6 +13,9 @@ import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
 import com.manruhomerun.yadan.travel.repository.*;
+import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
+import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
+import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
 import com.manruhomerun.yadan.travelspot.service.TravelSpotService;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -23,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -40,9 +45,42 @@ public class TravelService {
     private final TravelThemeRepository travelThemeRepository;
     private final ThemeRepository themeRepository;
     private final UserRepository userRepository;
+    private final TravelSpotRepository travelSpotRepository;
+    private final ExternalApiClient externalApiClient;
 
     // service
     private final TravelSpotService travelSpotService;
+
+    public TravelSpot getTravelSpotById(String travelSpotId) {
+        TravelSpot travelSpot = travelSpotRepository.findById(travelSpotId)
+            .orElseGet(() -> {
+                Map<String, Object> queryParams = new LinkedHashMap<>();
+                queryParams.put("contentId", travelSpotId);
+                TourApiDetailCommonResponse response = externalApiClient.get(
+                        "/detailCommon2",
+                        queryParams,
+                        TourApiDetailCommonResponse.class
+                );
+
+                TourApiDetailCommonResponse.Item item = response.response().body().items().item().getFirst();
+
+                // 외부 API 응답을 현재 travel_spot 스키마에 맞춰 저장한다.
+                return travelSpotRepository.save(
+                        TravelSpot.builder()
+                                .id(item.contentid())
+                                .name(item.title())
+                                .latitude(new BigDecimal(item.mapy()))
+                                .longitude(new BigDecimal(item.mapx()))
+                                .regionCode(item.lDongRegnCd() + item.lDongSignguCd())
+                                .category(Integer.valueOf(item.contenttypeid()))
+                                .image(item.firstimage() == null || item.firstimage().isBlank() ? null : item.firstimage())
+                                .build()
+                );
+            });
+        return travelSpot;
+    }
+
+
 
     public void createTravel(String userId, TravelCreateRequest request) {
         Long baseballGameId = request.baseballGame().id();
@@ -93,17 +131,17 @@ public class TravelService {
         for(TravelCreateRequest.ScheduleRequest schedule : request.schedule()) {
             List<String> travelSpotIds = schedule.travelSpotIdList();
             AtomicInteger order = new AtomicInteger(1);
-            // TODO: 여행지 순서 반영되도록 수정
-            travelSpotService.getTravelSpotListByIds(travelSpotIds)
-                    .stream().map(
-                            travelSpot -> TravelTravelSpot.builder()
-                                    .travel(travel)
-                                    .travelSpot(travelSpot)
-                                    .day(schedule.day())
-                                    .order(order.getAndIncrement())
-                                    .build()
-                    )
-                    .forEach(travelTravelSpotRepository::save);
+            for(String travelSpotId : travelSpotIds) {
+
+                TravelSpot travelSpot = getTravelSpotById(travelSpotId);
+                TravelTravelSpot travelTravelSpot = TravelTravelSpot.builder()
+                        .travel(travel)
+                        .travelSpot(travelSpot)
+                        .day(schedule.day())
+                        .order(order.getAndIncrement())
+                        .build();
+                travelTravelSpotRepository.save(travelTravelSpot);
+            }
         }
     }
 
@@ -125,17 +163,17 @@ public class TravelService {
         for (TravelModifyRequest.ScheduleRequest schedule : request.schedule()) {
             List<String> travelSpotIds = schedule.travelSpotIdList();
             AtomicInteger order = new AtomicInteger(1);
-            // TODO: 여행지 순서 반영되도록 수정
-            travelSpotService.getTravelSpotListByIds(travelSpotIds)
-                    .stream().map(
-                            travelSpot -> TravelTravelSpot.builder()
-                                    .travel(travel)
-                                    .travelSpot(travelSpot)
-                                    .day(schedule.day())
-                                    .order(order.getAndIncrement())
-                                    .build()
-                    )
-                    .forEach(travelTravelSpotRepository::save);
+            for(String travelSpotId : travelSpotIds) {
+
+                TravelSpot travelSpot = getTravelSpotById(travelSpotId);
+                TravelTravelSpot travelTravelSpot = TravelTravelSpot.builder()
+                        .travel(travel)
+                        .travelSpot(travelSpot)
+                        .day(schedule.day())
+                        .order(order.getAndIncrement())
+                        .build();
+                travelTravelSpotRepository.save(travelTravelSpot);
+            }
         }
     }
 
