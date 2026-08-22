@@ -82,4 +82,15 @@ public class TravelPreference {
     public void preUpdate() {
         updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
+
+    public void updatePreference(
+            Integer travelStyleValue,
+            PreferredTravelRegionCode residenceRegionCode,
+            Set<PreferredTravelRegionCode> preferredRegionCodes
+    ) {
+        this.travelStyleValue = travelStyleValue;
+        this.residenceRegionCode = residenceRegionCode;
+        this.preferredRegionCodes.clear();
+        this.preferredRegionCodes.addAll(preferredRegionCodes);
+    }
 }
