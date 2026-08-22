@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface TravelStickerRepository extends JpaRepository<TravelSticker, Long> {
     Optional<TravelSticker> findFirstByTravelIdOrderByIdAsc(String travelId);
+    boolean existsByTravelId(String travelId);
 }

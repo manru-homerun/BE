@@ -27,16 +27,17 @@ public record TravelListResponse(
 
         @Schema(description = "현재 사용자의 방장 여부", example = "true")
         boolean isLeader,
-        // TODO: 추가예정
-        // boolean hasSticker,
-        // boolean certifiedSpotsCount,
+
+        @Schema(description = "스티커 보유 여부", example = "true")
+        boolean hasSticker,
+
         @Schema(description = "등록된 여행지 수", example = "6")
         int spotsCount,
 
         @Schema(description = "직관 경기 정보")
         BaseballGameResponse baseballGame
 ) {
-    public static TravelListResponse from(Travel travel, String userId) {
+    public static TravelListResponse from(Travel travel, String userId, boolean hasSticker) {
         List<User> users = travel.getTravelUserList().stream()
                 .map(travelUser -> travelUser.getUser())
                 .toList();
@@ -53,7 +54,7 @@ public record TravelListResponse(
                 travel.getName(),
                 travel.getRegionCode(),
                 isLeader,
-                // travel.getTravelTravelSpotList() != null && !travel.getTravelTravelSpotList().isEmpty(),
+                hasSticker,
                 travel.getTravelTravelSpotList() != null ? travel.getTravelTravelSpotList().size() : 0,
                 BaseballGameResponse.from(travel.getBaseballGame())
         );
