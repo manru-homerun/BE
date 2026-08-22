@@ -62,14 +62,17 @@ public record BaseballGameDetailResponse(
             @Schema(description = "구장 위도", example = "37.5122")
             BigDecimal latitude,
             @Schema(description = "구장 경도", example = "127.0719")
-            BigDecimal longitude
+            BigDecimal longitude,
+            @Schema(description = "경기장 지역 코드", example = "11000")
+            String regionCode
     ) {
         public static StadiumSummary from(BaseballStadium stadium) {
             return new StadiumSummary(
                     stadium.getId(),
                     stadium.getName(),
                     stadium.getLatitude(),
-                    stadium.getLongitude()
+                    stadium.getLongitude(),
+                    stadium.getRegionCode()
             );
         }
     }
