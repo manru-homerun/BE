@@ -16,6 +16,7 @@ import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
 import com.manruhomerun.yadan.user.dto.TravelPreferenceResponse;
+import com.manruhomerun.yadan.user.dto.TravelPreferenceUpdateRequest;
 import com.manruhomerun.yadan.user.dto.UserProfileResponse;
 import com.manruhomerun.yadan.user.dto.UserProfileUpdateRequest;
 import com.manruhomerun.yadan.user.error.UserErrorCode;
@@ -109,6 +110,45 @@ public class UserService {
                 .orElseThrow(() -> new UserException(
                         UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND
                 ));
+
+        return TravelPreferenceResponse.from(travelPreference);
+    }
+
+    // 나의 여행 취향 정보 수정
+    @Transactional
+    public TravelPreferenceResponse updatePreference(
+            String userId,
+            TravelPreferenceUpdateRequest request
+    ) {
+        userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserException(
+                        UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND
+                ));
+
+        PreferredTravelRegionCode residenceRegionCode;
+        Set<PreferredTravelRegionCode> preferredRegionCodes = new HashSet<>();
+
+        try {
+            residenceRegionCode = PreferredTravelRegionCode.fromRegionName(request.residenceRegion());
+
+            for (String preferredRegion : request.preferredRegions()) {
+                preferredRegionCodes.add(PreferredTravelRegionCode.fromRegionName(preferredRegion));
+            }
+        } catch (IllegalArgumentException exception) {
+            throw new UserException(
+                    UserErrorCode.INVALID_TRAVEL_REGION,
+                    exception.getMessage()
+            );
+        }
+
+        travelPreference.updatePreference(
+                request.travelStyleValue(),
+                residenceRegionCode,
+                preferredRegionCodes
+        );
 
         return TravelPreferenceResponse.from(travelPreference);
     }
