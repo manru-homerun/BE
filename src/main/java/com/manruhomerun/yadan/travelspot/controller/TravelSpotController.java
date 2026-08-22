@@ -146,7 +146,7 @@ public class TravelSpotController {
     })
     public ResponseEntity<List<TravelSpotDibsItemResponse>> getDibs(
             @Parameter(description = "조회할 지역", example = "BUSAN")
-            @RequestParam TravelRegionCode region,
+            @RequestParam(required = false) TravelRegionCode region,
             HttpServletRequest httpRequest
     ) {
 //        String userId = (String) httpRequest.getAttribute("userId");
