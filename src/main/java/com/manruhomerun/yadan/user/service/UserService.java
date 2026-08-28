@@ -14,6 +14,8 @@ import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travelspot.domain.enums.PreferredTravelRegionCode;
 import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
 import com.manruhomerun.yadan.user.domain.entity.User;
+import com.manruhomerun.yadan.user.dto.NicknameCheckRequest;
+import com.manruhomerun.yadan.user.dto.NicknameCheckResponse;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
 import com.manruhomerun.yadan.user.dto.TravelPreferenceResponse;
 import com.manruhomerun.yadan.user.dto.TravelPreferenceUpdateRequest;
@@ -99,6 +101,19 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         return UserProfileResponse.from(user);
+    }
+
+    // 닉네임 중복 확인
+    public NicknameCheckResponse checkNickname(String userId, NicknameCheckRequest request) {
+        userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        boolean duplicated = userRepository.existsByNicknameAndIdNot(
+                request.nickname(),
+                userId
+        );
+
+        return new NicknameCheckResponse(!duplicated);
     }
 
     // 나의 여행 취향 정보 조회
