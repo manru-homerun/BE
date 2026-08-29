@@ -95,6 +95,14 @@ public class TravelService {
         // TODO: UserNotFoundException으로 바꾸기? 암튼 확인해봐야 함
         User leader = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
+        // 친구 목록에 유효하지 않는 사용자 있는 경우 걸러내기용
+        Set<String> friendIds = request.friends() == null ? Set.of() : new HashSet<>(request.friends());
+        List<User> friends = userRepository.findAllById(friendIds);
+
+        if (friends.size() != friendIds.size()) {
+            throw new UserNotFoundException();
+        }
+
         Travel travel = Travel.builder()
                 .startDate(request.from())
                 .endDate(request.to())
@@ -106,8 +114,7 @@ public class TravelService {
         travelRepository.save(travel);
 
         // 사용자와의 연관관계 저장
-        userRepository.findAllById(request.friends())
-                .stream().map(
+        friends.stream().map(
                         user -> TravelUser.builder()
                                 .travel(travel)
                                 .user(user)
