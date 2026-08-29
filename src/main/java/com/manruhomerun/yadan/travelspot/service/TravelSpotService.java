@@ -1,6 +1,7 @@
 package com.manruhomerun.yadan.travelspot.service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +117,7 @@ public class TravelSpotService {
     }
 
     @Transactional(readOnly = true)
-    public TravelSpotDetailResponse getSpotDetail(String spotId) {
+    public TravelSpotDetailResponse getSpotDetail(String spotId, String userId) {
         Map<String, Object> queryParams = new LinkedHashMap<>();
         queryParams.put("contentId", spotId);
 
@@ -141,6 +142,9 @@ public class TravelSpotService {
                 ? item.addr1()
                 : item.addr1() + " " + item.addr2();
 
+        String contentId = item.contentid();
+        boolean dibs = dibsRepository.existsByUserIdAndTravelSpotId(userId, contentId);
+
         return new TravelSpotDetailResponse(
                 item.contentid(),
                 TravelSpotCategory.getDisplayNameByContentTypeId(Integer.valueOf(item.contenttypeid())),
@@ -151,7 +155,8 @@ public class TravelSpotService {
                 address,
                 item.mapx(),
                 item.mapy(),
-                item.overview()
+                item.overview(),
+                dibs
         );
     }
 
