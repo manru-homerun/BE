@@ -235,7 +235,4 @@ public class TravelSpotService {
         );
     }
 
-    public void getSuggestions(TravelRegionCode region){
-        // AI 논의 후 작성 예정
-    }
 }

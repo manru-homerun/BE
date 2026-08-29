@@ -52,7 +52,7 @@ public class TravelSpotController {
             @Parameter(description = "검색어", example = "시장", required = true)
             @RequestParam @NotBlank(message = "keyword는 필수입니다.") String searchKeyword,
             @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
-            @RequestParam TravelRegionCode region,
+            @RequestParam(required = false) TravelRegionCode region,
             @Parameter(description = "페이지 번호", example = "1")
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "pageNumber는 1 이상이어야 합니다.") int pageNumber,
             @Parameter(description = "페이지 크기", example = "10")
@@ -154,14 +154,4 @@ public class TravelSpotController {
         return ResponseEntity.ok(travelSpotService.getDibs(userId, region));
     }
 
-    @GetMapping("/suggestions")
-    public ResponseEntity<?> getSuggestions(
-            @RequestParam(required = false) TravelRegionCode region,
-            HttpServletRequest httpRequest
-    ){
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
-        travelSpotService.getSuggestions(region);
-        return ResponseEntity.ok().build();
-    }
 }

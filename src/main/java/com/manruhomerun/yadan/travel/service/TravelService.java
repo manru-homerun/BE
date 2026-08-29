@@ -15,7 +15,9 @@ import com.manruhomerun.yadan.travel.error.TravelErrorCode;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
 import com.manruhomerun.yadan.travel.repository.*;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
+import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -453,5 +455,37 @@ public class TravelService {
 
     public void generateTravelCourse(TravelGenerateRequest request){
         // AI 논의 후 작성 예정
+    }
+
+    public PopularTravelSpotResponse getPopularSpots(TravelRegionCode region){
+        LocalDate oneWeekAgo = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(7);
+        PageRequest limit = PageRequest.of(0, 5);
+        List<TravelSpot> popularTravelSpots = travelTravelSpotRepository
+                .findPopularTravelSpotsByRegionCodeAndEndDateAfter(region.getCode(), oneWeekAgo, limit);
+
+        if (popularTravelSpots.isEmpty()) {
+            popularTravelSpots = travelTravelSpotRepository
+                    .findPopularTravelSpotsByRegionCode(region.getCode(), limit);
+        }
+
+        List<PopularTravelSpotResponse.ContentResponse> contents = popularTravelSpots.stream()
+                .map(travelSpot -> {
+                    Map<String, Object> queryParams = new LinkedHashMap<>();
+                    queryParams.put("contentId", travelSpot.getId());
+                    TourApiDetailCommonResponse response = externalApiClient.get(
+                            "/detailCommon2",
+                            queryParams,
+                            TourApiDetailCommonResponse.class
+                    );
+                    TourApiDetailCommonResponse.Item item = response.response().body().items().item().getFirst();
+                    String address = item.addr2() == null || item.addr2().isBlank()
+                            ? item.addr1()
+                            : item.addr1() + " " + item.addr2();
+                    return PopularTravelSpotResponse.ContentResponse.from(travelSpot, address);
+                })
+                .toList();
+
+        return new PopularTravelSpotResponse(contents);
+
     }
 }

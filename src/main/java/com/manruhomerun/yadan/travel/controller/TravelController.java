@@ -5,6 +5,8 @@ import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
 import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.service.TravelService;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -142,6 +144,13 @@ public class TravelController {
     public ResponseEntity<Void> generateTravelCourse(@RequestBody TravelGenerateRequest request) {
         travelService.generateTravelCourse(request);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/popular-spots")
+    public ResponseEntity<PopularTravelSpotResponse> getPopularSpots(
+            @RequestParam TravelRegionCode region
+    ){
+        return ResponseEntity.ok(travelService.getPopularSpots(region));
     }
 
 }
