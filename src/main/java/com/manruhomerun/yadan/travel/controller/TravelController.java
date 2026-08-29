@@ -116,7 +116,7 @@ public class TravelController {
     }
 
     // 여행 테마 조회
-    @GetMapping("/theme")
+    @GetMapping("/themes")
     @Operation(summary = "여행 테마 목록 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행 테마 목록 조회 성공", useReturnTypeSchema = true)
@@ -147,10 +147,21 @@ public class TravelController {
     }
 
     @GetMapping("/popular-spots")
+    @Operation(summary = "인기 여행지 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인기 여행지 조회 성공",
+                    content = @Content(schema = @Schema(implementation = PopularTravelSpotResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 지역 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<PopularTravelSpotResponse> getPopularSpots(
-            @RequestParam TravelRegionCode region
+            @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
+            @RequestParam TravelRegionCode region,
+            HttpServletRequest httpRequest
     ){
-        return ResponseEntity.ok(travelService.getPopularSpots(region));
+        //        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        return ResponseEntity.ok(travelService.getPopularSpots(region, userId));
     }
 
 }

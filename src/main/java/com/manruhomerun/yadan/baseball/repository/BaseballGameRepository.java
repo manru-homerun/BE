@@ -31,8 +31,8 @@ public interface BaseballGameRepository extends JpaRepository<BaseballGame, Long
         ORDER BY bg.gameDate ASC, bg.id ASC
     """)
     Page<BaseballGame> findUpcomingGamesByTeamId(
-            Long teamId,
-            LocalDateTime baselineDateTime,
+            @Param("teamId") Long teamId,
+            @Param("gameDate") LocalDateTime baselineDateTime,
             Pageable pageable
     );
 

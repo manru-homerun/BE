@@ -18,6 +18,7 @@ import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
+import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -49,6 +50,7 @@ public class TravelService {
     private final ThemeRepository themeRepository;
     private final UserRepository userRepository;
     private final TravelSpotRepository travelSpotRepository;
+    private final DibsRepository dibsRepository;
     private final ExternalApiClient externalApiClient;
 
     //private final TravelSpotService travelSpotService;
@@ -457,7 +459,7 @@ public class TravelService {
         // AI 논의 후 작성 예정
     }
 
-    public PopularTravelSpotResponse getPopularSpots(TravelRegionCode region){
+    public PopularTravelSpotResponse getPopularSpots(TravelRegionCode region, String userId){
         LocalDate oneWeekAgo = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(7);
         PageRequest limit = PageRequest.of(0, 5);
         List<TravelSpot> popularTravelSpots = travelTravelSpotRepository
@@ -481,7 +483,8 @@ public class TravelService {
                     String address = item.addr2() == null || item.addr2().isBlank()
                             ? item.addr1()
                             : item.addr1() + " " + item.addr2();
-                    return PopularTravelSpotResponse.ContentResponse.from(travelSpot, address);
+                    boolean dibs = dibsRepository.existsByUserIdAndTravelSpotId(userId, travelSpot.getId());
+                    return PopularTravelSpotResponse.ContentResponse.from(travelSpot, address, dibs);
                 })
                 .toList();
 

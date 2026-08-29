@@ -144,14 +144,20 @@ public class TravelSpotController {
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<TravelSpotDibsItemResponse>> getDibs(
+    public ResponseEntity<PageResponse<TravelSpotDibsItemResponse>> getDibs(
             @Parameter(description = "조회할 지역", example = "BUSAN")
             @RequestParam TravelRegionCode region,
+            @Parameter(description = "페이지 번호", example = "1")
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "pageNumber는 1 이상이어야 합니다.")
+            int pageNumber,
+            @Parameter(description = "페이지 크기", example = "10")
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "pageSize는 1 이상이어야 합니다.")
+            int pageSize,
             HttpServletRequest httpRequest
     ) {
 //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
-        return ResponseEntity.ok(travelSpotService.getDibs(userId, region));
+        return ResponseEntity.ok(travelSpotService.getDibs(userId, region, pageNumber, pageSize));
     }
 
 }

@@ -29,16 +29,20 @@ public record PopularTravelSpotResponse(
             String title,
 
             @Schema(description = "여행지 지역 코드", example = "33200")
-            Integer regionCode
+            Integer regionCode,
+
+            @Schema(description = "사용자 찜 여부", example = "true")
+            boolean dibs
     ) {
-        public static ContentResponse from(TravelSpot travelSpot, String address) {
+        public static ContentResponse from(TravelSpot travelSpot, String address, boolean dibs) {
             return new ContentResponse(
                     travelSpot.getId(),
                     address,
                     TravelSpotCategory.getDisplayNameByContentTypeId(travelSpot.getCategory()),
                     travelSpot.getImage(),
                     travelSpot.getName(),
-                    Integer.valueOf(travelSpot.getRegionCode())
+                    Integer.valueOf(travelSpot.getRegionCode()),
+                    dibs
             );
         }
     }
