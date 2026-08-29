@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TravelService {
     private final BaseballGameRepository baseballGameRepository;
     private final TravelRepository travelRepository;
+    private final TravelStickerRepository travelStickerRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
     private final TravelUserRepository travelUserRepository;
     private final TravelThemeRepository travelThemeRepository;
@@ -189,7 +190,11 @@ public class TravelService {
             Page<TravelUser> page = travelUserRepository.findAllByUserId(userId, pageRequest);
             List<TravelListResponse> contents = page.getContent().stream()
                     .map(TravelUser::getTravel)
-                    .map(travel -> TravelListResponse.from(travel, userId))
+                    .map(travel -> TravelListResponse.from(
+                            travel,
+                            userId,
+                            travelStickerRepository.existsByTravelId(travel.getId())
+                    ))
                     .toList();
 
             return PageResponse.from(page, contents);
@@ -205,7 +210,11 @@ public class TravelService {
                 })
                 .sorted(Comparator.comparing(Travel::getStartDate).reversed()
                         .thenComparing(Travel::getId, Comparator.reverseOrder()))
-                .map(travel -> TravelListResponse.from(travel, userId))
+                .map(travel -> TravelListResponse.from(
+                        travel,
+                        userId,
+                        travelStickerRepository.existsByTravelId(travel.getId())
+                ))
                 .toList();
 
         int start = Math.min((validatedPageNumber - 1) * pageRequest.getPageSize(), filteredTravels.size());

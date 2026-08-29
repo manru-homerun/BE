@@ -3,6 +3,7 @@ package com.manruhomerun.yadan.baseball.dto;
 import java.time.LocalDateTime;
 
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
+import com.manruhomerun.yadan.baseball.domain.entity.BaseballStadium;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballTeam;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,7 +16,9 @@ public record BaseballGameScheduleItemResponse(
         @Schema(description = "원정 팀 정보")
         TeamSummary awayTeam,
         @Schema(description = "홈 팀 정보")
-        TeamSummary homeTeam
+        TeamSummary homeTeam,
+        @Schema(description = "경기장 정보")
+        StadiumSummary stadium
 ) {
 
     public static BaseballGameScheduleItemResponse from(BaseballGame game) {
@@ -23,7 +26,8 @@ public record BaseballGameScheduleItemResponse(
                 game.getId(),
                 game.getGameDate(),
                 TeamSummary.from(game.getAwayTeam()),
-                TeamSummary.from(game.getHomeTeam())
+                TeamSummary.from(game.getHomeTeam()),
+                StadiumSummary.from(game.getStadium())
         );
     }
 
@@ -37,6 +41,20 @@ public record BaseballGameScheduleItemResponse(
     ) {
         public static TeamSummary from(BaseballTeam team) {
             return new TeamSummary(team.getId(), team.getTeamName(), team.getLogoImage());
+        }
+    }
+
+    public record StadiumSummary(
+            @Schema(description = "구장 ID", example = "10")
+            Long stadiumId,
+            @Schema(description = "구장 이름", example = "잠실야구장")
+            String stadiumName
+    ) {
+        public static BaseballGameScheduleItemResponse.StadiumSummary from(BaseballStadium stadium) {
+            return new BaseballGameScheduleItemResponse.StadiumSummary(
+                    stadium.getId(),
+                    stadium.getName()
+            );
         }
     }
 }
