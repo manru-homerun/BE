@@ -45,7 +45,7 @@ public class TravelController {
         //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
         travelService.createTravel(userId, request);
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.noContent().build();
     }
 
     // 특정 여행 수정
