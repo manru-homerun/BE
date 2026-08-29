@@ -3,10 +3,7 @@ package com.manruhomerun.yadan.travel.controller;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
-import com.manruhomerun.yadan.travel.dto.TravelCreateRequest;
-import com.manruhomerun.yadan.travel.dto.TravelDetailResponse;
-import com.manruhomerun.yadan.travel.dto.TravelListResponse;
-import com.manruhomerun.yadan.travel.dto.TravelModifyRequest;
+import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.service.TravelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -125,6 +122,20 @@ public class TravelController {
     public ResponseEntity<?> getTravelThemeList(
     ){
         return ResponseEntity.ok(travelService.getTravelThemeList());
+    }
+
+    @PostMapping("/align")
+    @Operation(summary = "여행 코스 정렬")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "여행 코스 정렬 성공",
+                    content = @Content(schema = @Schema(implementation = TravelAlignResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "경기 또는 여행지를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<TravelAlignResponse> getAlignedTravelList(@RequestBody TravelAlignRequest request){
+        return ResponseEntity.ok(travelService.getAlignedTravelList(request));
     }
 
 }
