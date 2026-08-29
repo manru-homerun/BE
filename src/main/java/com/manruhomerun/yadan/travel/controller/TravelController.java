@@ -138,4 +138,10 @@ public class TravelController {
         return ResponseEntity.ok(travelService.getAlignedTravelList(request));
     }
 
+    @PostMapping("/generate")
+    public ResponseEntity<Void> generateTravelCourse(@RequestBody TravelGenerateRequest request) {
+        travelService.generateTravelCourse(request);
+        return ResponseEntity.noContent().build();
+    }
+
 }

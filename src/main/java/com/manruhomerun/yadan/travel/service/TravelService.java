@@ -254,90 +254,89 @@ public class TravelService {
                 baseballGame.getGameDate().toLocalDate()
         ) + 1;
 
-        List<AlignedScheduleResult> alignedSchedules = request.schedule().stream()
-                .map(schedule -> alignSchedule(schedule, baseballGameDay, baseballGame))
+        AtomicInteger baseballGameAfterIdx = new AtomicInteger(-1);
+        List<TravelAlignResponse.ScheduleResponse> scheduleResponses = request.schedule().stream()
+                .map(schedule -> alignSchedule(
+                        schedule,
+                        baseballGameDay,
+                        baseballGame,
+                        baseballGameAfterIdx
+                ))
                 .toList();
-
-        List<TravelAlignResponse.ScheduleResponse> scheduleResponses = alignedSchedules.stream()
-                .map(AlignedScheduleResult::scheduleResponse)
-                .toList();
-
-        int gameIdx = alignedSchedules.stream()
-                .filter(schedule -> Objects.equals(schedule.scheduleResponse().day(), baseballGameDay))
-                .findFirst()
-                .map(AlignedScheduleResult::gameIdx)
-                .orElse(-1);
 
         return new TravelAlignResponse(
                 new TravelAlignResponse.BaseballGameResponse(
                         request.baseballGame().id(),
                         baseballGameDay,
-                        gameIdx
+                        baseballGameAfterIdx.get()
                 ),
                 scheduleResponses
         );
     }
 
-    private AlignedScheduleResult alignSchedule(
+    private TravelAlignResponse.ScheduleResponse alignSchedule(
             TravelAlignRequest.ScheduleRequest scheduleRequest,
             int baseballGameDay,
-            BaseballGame baseballGame
+            BaseballGame baseballGame,
+            AtomicInteger baseballGameAfterIdx
     ) {
         List<TravelSpot> travelSpots = scheduleRequest.travelSpotIdList().stream()
                 .map(this::getTravelSpotById)
                 .toList();
         boolean hasBaseballGame = Objects.equals(scheduleRequest.day(), baseballGameDay);
-        List<RouteNode> routeNodes = new ArrayList<>();
-
-        for (TravelSpot travelSpot : travelSpots) {
-            routeNodes.add(RouteNode.fromTravelSpot(travelSpot));
-        }
+        List<TravelSpot> routeTravelSpots = new ArrayList<>(travelSpots);
         if (hasBaseballGame) {
-            routeNodes.add(RouteNode.fromBaseballStadium(baseballGame.getStadium()));
+            // 야구장은 null 경유지로 두고 거리 계산 시 경기장 좌표를 사용한다.
+            routeTravelSpots.add(null);
         }
 
-        if (routeNodes.isEmpty()) {
-            return new AlignedScheduleResult(
-                    new TravelAlignResponse.ScheduleResponse(scheduleRequest.day(), List.of()),
-                    -1
-            );
+        if (routeTravelSpots.isEmpty()) {
+            return new TravelAlignResponse.ScheduleResponse(scheduleRequest.day(), List.of());
         }
 
-        List<RouteNode> optimizedRoute = optimizeRoute(routeNodes);
+        List<TravelSpot> optimizedRoute = optimizeRoute(routeTravelSpots, baseballGame.getStadium());
         int gameIdx = -1;
         List<TravelAlignResponse.TravelSpotResponse> orderedTravelSpots = new ArrayList<>();
 
-        for (RouteNode routeNode : optimizedRoute) {
-            if (routeNode.baseballGameNode()) {
+        for (TravelSpot travelSpot : optimizedRoute) {
+            if (travelSpot == null) {
                 gameIdx = orderedTravelSpots.size() - 1;
                 continue;
             }
-            orderedTravelSpots.add(TravelAlignResponse.TravelSpotResponse.from(routeNode.travelSpot()));
+            orderedTravelSpots.add(TravelAlignResponse.TravelSpotResponse.from(travelSpot));
         }
 
-        // 야구장 노드를 함께 정렬한 뒤, 경기 직전 여행지의 인덱스를 gameIdx로 반환한다.
-        return new AlignedScheduleResult(
-                new TravelAlignResponse.ScheduleResponse(
-                        scheduleRequest.day(),
-                        orderedTravelSpots
-                ),
-                gameIdx
+        if (hasBaseballGame) {
+            baseballGameAfterIdx.set(gameIdx);
+        }
+
+        // 야구장 위치를 함께 정렬한 뒤, 경기 직전 여행지의 인덱스를 반환한다.
+        return new TravelAlignResponse.ScheduleResponse(
+                scheduleRequest.day(),
+                orderedTravelSpots
         );
     }
 
-    private List<RouteNode> optimizeRoute(List<RouteNode> routeNodes) {
-        if (routeNodes.size() <= 2) {
-            return routeNodes;
+    private List<TravelSpot> optimizeRoute(
+            List<TravelSpot> routeTravelSpots,
+            BaseballStadium baseballStadium
+    ) {
+        if (routeTravelSpots.size() <= 2) {
+            return routeTravelSpots;
         }
 
-        List<RouteNode> bestRoute = null;
+        List<TravelSpot> bestRoute = null;
         double bestDistance = Double.MAX_VALUE;
 
         // 시작점을 모두 시도해서 가장 짧은 nearest neighbor 초기해를 선택한다.
-        for (RouteNode startNode : routeNodes) {
-            List<RouteNode> initialRoute = buildNearestNeighborRoute(routeNodes, startNode);
-            List<RouteNode> optimizedRoute = improveRouteWithTwoOpt(initialRoute);
-            double routeDistance = calculateRouteDistance(optimizedRoute);
+        for (TravelSpot startTravelSpot : routeTravelSpots) {
+            List<TravelSpot> initialRoute = buildNearestNeighborRoute(
+                    routeTravelSpots,
+                    startTravelSpot,
+                    baseballStadium
+            );
+            List<TravelSpot> optimizedRoute = improveRouteWithTwoOpt(initialRoute, baseballStadium);
+            double routeDistance = calculateRouteDistance(optimizedRoute, baseballStadium);
 
             if (routeDistance < bestDistance) {
                 bestDistance = routeDistance;
@@ -345,50 +344,54 @@ public class TravelService {
             }
         }
 
-        return bestRoute == null ? routeNodes : bestRoute;
+        return bestRoute == null ? routeTravelSpots : bestRoute;
     }
 
-    private List<RouteNode> buildNearestNeighborRoute(
-            List<RouteNode> routeNodes,
-            RouteNode startNode
+    private List<TravelSpot> buildNearestNeighborRoute(
+            List<TravelSpot> routeTravelSpots,
+            TravelSpot startTravelSpot,
+            BaseballStadium baseballStadium
     ) {
-        List<RouteNode> route = new ArrayList<>();
-        Set<String> visited = new HashSet<>();
-        RouteNode currentNode = startNode;
+        List<TravelSpot> route = new ArrayList<>();
+        List<TravelSpot> unvisitedTravelSpots = new ArrayList<>(routeTravelSpots);
+        TravelSpot currentTravelSpot = startTravelSpot;
 
-        route.add(currentNode);
-        visited.add(currentNode.key());
+        route.add(currentTravelSpot);
+        unvisitedTravelSpots.remove(currentTravelSpot);
 
-        while (route.size() < routeNodes.size()) {
-            RouteNode baseNode = currentNode;
-            RouteNode nextNode = routeNodes.stream()
-                    .filter(node -> !visited.contains(node.key()))
-                    .min(Comparator.comparingDouble(node -> getDistance(baseNode, node)))
-                    .orElse(null);
+        while (!unvisitedTravelSpots.isEmpty()) {
+            TravelSpot baseTravelSpot = currentTravelSpot;
+            TravelSpot nextTravelSpot = unvisitedTravelSpots.getFirst();
 
-            if (nextNode == null) {
-                break;
+            for (TravelSpot candidateTravelSpot : unvisitedTravelSpots) {
+                if (getDistance(baseTravelSpot, candidateTravelSpot, baseballStadium)
+                        < getDistance(baseTravelSpot, nextTravelSpot, baseballStadium)) {
+                    nextTravelSpot = candidateTravelSpot;
+                }
             }
 
-            route.add(nextNode);
-            visited.add(nextNode.key());
-            currentNode = nextNode;
+            route.add(nextTravelSpot);
+            unvisitedTravelSpots.remove(nextTravelSpot);
+            currentTravelSpot = nextTravelSpot;
         }
 
         return route;
     }
 
-    private List<RouteNode> improveRouteWithTwoOpt(List<RouteNode> route) {
-        List<RouteNode> optimizedRoute = new ArrayList<>(route);
+    private List<TravelSpot> improveRouteWithTwoOpt(
+            List<TravelSpot> route,
+            BaseballStadium baseballStadium
+    ) {
+        List<TravelSpot> optimizedRoute = new ArrayList<>(route);
         boolean improved = true;
 
         while (improved) {
             improved = false;
             for (int i = 1; i < optimizedRoute.size() - 1; i++) {
                 for (int j = i + 1; j < optimizedRoute.size(); j++) {
-                    List<RouteNode> swappedRoute = twoOptSwap(optimizedRoute, i, j);
-                    if (calculateRouteDistance(swappedRoute)
-                            < calculateRouteDistance(optimizedRoute)) {
+                    List<TravelSpot> swappedRoute = twoOptSwap(optimizedRoute, i, j);
+                    if (calculateRouteDistance(swappedRoute, baseballStadium)
+                            < calculateRouteDistance(optimizedRoute, baseballStadium)) {
                         optimizedRoute = swappedRoute;
                         improved = true;
                     }
@@ -399,11 +402,11 @@ public class TravelService {
         return optimizedRoute;
     }
 
-    private List<RouteNode> twoOptSwap(List<RouteNode> route, int i, int j) {
-        List<RouteNode> swappedRoute = new ArrayList<>();
+    private List<TravelSpot> twoOptSwap(List<TravelSpot> route, int i, int j) {
+        List<TravelSpot> swappedRoute = new ArrayList<>();
         swappedRoute.addAll(route.subList(0, i));
 
-        List<RouteNode> reversedSection = new ArrayList<>(route.subList(i, j + 1));
+        List<TravelSpot> reversedSection = new ArrayList<>(route.subList(i, j + 1));
         Collections.reverse(reversedSection);
         swappedRoute.addAll(reversedSection);
 
@@ -414,19 +417,32 @@ public class TravelService {
         return swappedRoute;
     }
 
-    private double calculateRouteDistance(List<RouteNode> route) {
+    private double calculateRouteDistance(List<TravelSpot> route, BaseballStadium baseballStadium) {
         double totalDistance = 0;
         for (int i = 0; i < route.size() - 1; i++) {
-            totalDistance += getDistance(route.get(i), route.get(i + 1));
+            totalDistance += getDistance(route.get(i), route.get(i + 1), baseballStadium);
         }
         return totalDistance;
     }
 
-    private double getDistance(RouteNode from, RouteNode to) {
-        double latitudeDifference = Math.toRadians(to.latitude().doubleValue() - from.latitude().doubleValue());
-        double longitudeDifference = Math.toRadians(to.longitude().doubleValue() - from.longitude().doubleValue());
-        double fromLatitude = Math.toRadians(from.latitude().doubleValue());
-        double toLatitude = Math.toRadians(to.latitude().doubleValue());
+    private double getDistance(TravelSpot from, TravelSpot to, BaseballStadium baseballStadium) {
+        double fromLatitude = from == null
+                ? baseballStadium.getLatitude().doubleValue()
+                : from.getLatitude().doubleValue();
+        double fromLongitude = from == null
+                ? baseballStadium.getLongitude().doubleValue()
+                : from.getLongitude().doubleValue();
+        double toLatitude = to == null
+                ? baseballStadium.getLatitude().doubleValue()
+                : to.getLatitude().doubleValue();
+        double toLongitude = to == null
+                ? baseballStadium.getLongitude().doubleValue()
+                : to.getLongitude().doubleValue();
+
+        double latitudeDifference = Math.toRadians(toLatitude - fromLatitude);
+        double longitudeDifference = Math.toRadians(toLongitude - fromLongitude);
+        fromLatitude = Math.toRadians(fromLatitude);
+        toLatitude = Math.toRadians(toLatitude);
 
         // 위도·경도를 지구 표면의 직선거리로 환산한다.
         double haversine = Math.sin(latitudeDifference / 2) * Math.sin(latitudeDifference / 2)
@@ -435,37 +451,7 @@ public class TravelService {
         return 6_371_000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
     }
 
-    private record RouteNode(
-            String key,
-            TravelSpot travelSpot,
-            BigDecimal longitude,
-            BigDecimal latitude,
-            boolean baseballGameNode
-    ) {
-        private static RouteNode fromTravelSpot(TravelSpot travelSpot) {
-            return new RouteNode(
-                    "spot:" + travelSpot.getId(),
-                    travelSpot,
-                    travelSpot.getLongitude(),
-                    travelSpot.getLatitude(),
-                    false
-            );
-        }
-
-        private static RouteNode fromBaseballStadium(BaseballStadium baseballStadium) {
-            return new RouteNode(
-                    "stadium:" + baseballStadium.getId(),
-                    null,
-                    baseballStadium.getLongitude(),
-                    baseballStadium.getLatitude(),
-                    true
-            );
-        }
-    }
-
-    private record AlignedScheduleResult(
-            TravelAlignResponse.ScheduleResponse scheduleResponse,
-            int gameIdx
-    ) {
+    public void generateTravelCourse(TravelGenerateRequest request){
+        // AI 논의 후 작성 예정
     }
 }

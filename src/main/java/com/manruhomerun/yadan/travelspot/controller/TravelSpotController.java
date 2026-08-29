@@ -146,11 +146,22 @@ public class TravelSpotController {
     })
     public ResponseEntity<List<TravelSpotDibsItemResponse>> getDibs(
             @Parameter(description = "조회할 지역", example = "BUSAN")
-            @RequestParam(required = false) TravelRegionCode region,
+            @RequestParam TravelRegionCode region,
             HttpServletRequest httpRequest
     ) {
 //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
         return ResponseEntity.ok(travelSpotService.getDibs(userId, region));
+    }
+
+    @GetMapping("/suggestions")
+    public ResponseEntity<?> getSuggestions(
+            @RequestParam(required = false) TravelRegionCode region,
+            HttpServletRequest httpRequest
+    ){
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        travelSpotService.getSuggestions(region);
+        return ResponseEntity.ok().build();
     }
 }
