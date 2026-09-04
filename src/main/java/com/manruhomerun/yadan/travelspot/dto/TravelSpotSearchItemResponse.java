@@ -14,7 +14,7 @@ public record TravelSpotSearchItemResponse(
         @Schema(description = "대표 이미지", example = "http://tong.visitkorea.or.kr/cms/resource/92/2947292_image2_1.jpg", nullable = true)
         String image,
         @Schema(description = "여행지 이름", example = "고성오일시장")
-        String title,
+        String name,
         @Schema(description = "법정동 지역 코드", example = "50332")
         String regionCode
 ) {

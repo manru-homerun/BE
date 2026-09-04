@@ -8,7 +8,7 @@ public record TravelSpotDetailResponse(
         @Schema(description = "여행지 카테고리", example = "축제·공연·행사", nullable = true)
         String category,
         @Schema(description = "여행지 제목", example = "2023 제20회 대한민국향토식문화대전(&남북음식문화축제)")
-        String title,
+        String name,
         @Schema(description = "전화번호", example = "남용진(02-577-1138, 010-2750-4432)", nullable = true)
         String tel,
         @Schema(description = "홈페이지 HTML", example = "<a href=\"http://www.foodcf.co.kr\" target=\"_blank\" title=\"새창: 대한민국향토식문화대전 홈페이지로 이동\">http://www.foodcf.co.kr</a>", nullable = true)
@@ -22,6 +22,8 @@ public record TravelSpotDetailResponse(
         @Schema(description = "위도", example = "37.4673918780", nullable = true)
         String latitude,
         @Schema(description = "개요", nullable = true)
-        String overview
+        String overview,
+        @Schema(description = "찜 여부", nullable = false)
+        Boolean dibs
 ) {
 }
