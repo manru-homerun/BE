@@ -14,7 +14,7 @@ public record NotificationSettingResponse(
         @Schema(description = "방문 인증 리마인드 활성화 여부", example = "true")
         Boolean visitVerificationReminderEnabled,
 
-        @Schema(description = "지역 경기 알림 활성화 여부", example = "false")
+        @Schema(description = "지역 경기 알림 활성화 여부", example = "true")
         Boolean nearbyGameNotificationEnabled
 ) {
 
