@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.notification.domain.entity.NotificationSetting;
 import com.manruhomerun.yadan.notification.dto.NotificationSettingResponse;
+import com.manruhomerun.yadan.notification.dto.NotificationSettingUpdateRequest;
 import com.manruhomerun.yadan.notification.error.exception.NotificationSettingNotFoundException;
 import com.manruhomerun.yadan.notification.repository.NotificationSettingRepository;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -28,5 +29,21 @@ public class NotificationSettingService {
                 .orElseThrow(NotificationSettingNotFoundException::new);
 
         return NotificationSettingResponse.from(notificationSetting);
+    }
+
+    @Transactional
+    public void updateSettings(String userId, NotificationSettingUpdateRequest request) {
+        userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        NotificationSetting notificationSetting = notificationSettingRepository.findByUserId(userId)
+                .orElseThrow(NotificationSettingNotFoundException::new);
+
+        notificationSetting.update(
+                request.notificationEnabled(),
+                request.ticketOpenNotificationEnabled(),
+                request.visitVerificationReminderEnabled(),
+                request.nearbyGameNotificationEnabled()
+        );
     }
 }
