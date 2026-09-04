@@ -89,42 +89,20 @@ public class AuthService {
         );
     }
 
-    // RefreshToken 검증 + Access/Refresh Token 새로 발급
+    // RefreshToken 검증 + AccessToken 새로 발급
     @Transactional
     public RefreshTokenResponse refresh(String refreshToken) {
-        // refreshToken 검증
         RefreshTokenClaims claims = jwtProvider.verifyRefreshToken(refreshToken);
-        // refreshToken 정보 조회
-        LoginSession loginSession = loginSessionRepository.findByIdAndUser_Id(
-                        claims.sessionId(),
-                        claims.userId()
-                )
+
+        User user = userRepository.findById(claims.userId())
                 .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN));
 
-        if (loginSession.isRevoked()
-                || loginSession.isExpired()
-                || !tokenHasher.matches(refreshToken, loginSession.getRefreshTokenHash())) {
-            throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
-        }
-
-        // 사용자 정보 조회
-        User user = loginSession.getUser();
         if (Boolean.TRUE.equals(user.getIsDeleted())) {
             throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
         }
 
-        // accessToken, refreshToken 발급
-        TokenPair tokenPair = jwtProvider.issueTokenPair(user.getId(), loginSession.getId());
-        String newRefreshTokenHash = tokenHasher.hash(tokenPair.refreshToken());
-
-        loginSession.rotate(
-                newRefreshTokenHash,
-                tokenPair.refreshTokenExpiresAt()
-        );
-
         return new RefreshTokenResponse(
-                tokenPair.accessToken(),
-                tokenPair.refreshToken()
+                jwtProvider.issueAccessToken(user.getId())
         );
     }
 
