@@ -62,7 +62,7 @@ public class NotificationSetting {
     private Boolean visitVerificationReminderEnabled;
 
     @Column(name = "nearby_game_notification_enabled", nullable = false)
-    @ColumnDefault("false")
+    @ColumnDefault("true")
     private Boolean nearbyGameNotificationEnabled;
 
     @Column(name = "created_at", nullable = false)
@@ -80,6 +80,18 @@ public class NotificationSetting {
                 .visitVerificationReminderEnabled(true)
                 .nearbyGameNotificationEnabled(true)
                 .build();
+    }
+
+    public void update(
+            Boolean notificationEnabled,
+            Boolean ticketOpenNotificationEnabled,
+            Boolean visitVerificationReminderEnabled,
+            Boolean nearbyGameNotificationEnabled
+    ) {
+        this.notificationEnabled = notificationEnabled;
+        this.ticketOpenNotificationEnabled = ticketOpenNotificationEnabled;
+        this.visitVerificationReminderEnabled = visitVerificationReminderEnabled;
+        this.nearbyGameNotificationEnabled = nearbyGameNotificationEnabled;
     }
 
     @PrePersist
