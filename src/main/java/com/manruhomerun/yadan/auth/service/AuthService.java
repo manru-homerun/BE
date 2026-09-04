@@ -37,7 +37,7 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final TokenHasher tokenHasher;
 
-    // 카카오 사용자 검증, user 생성, loginSession 생성, JWT 발급
+    // 카카오 사용자 검증, user 생성, JWT 발급
     @Transactional
     public LoginResponse login(UserProvider provider, String providerAccessToken) {
         if (provider != UserProvider.KAKAO) {
@@ -69,18 +69,9 @@ public class AuthService {
             throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
         }
 
-        // refreshToken 저장
-        String loginSessionId = UUID.randomUUID().toString();
-        TokenPair tokenPair = jwtProvider.issueTokenPair(user.getId(), loginSessionId);
-        String refreshTokenHash = tokenHasher.hash(tokenPair.refreshToken());
-
-        LoginSession loginSession = LoginSession.create(
-                loginSessionId,
-                user,
-                refreshTokenHash,
-                tokenPair.refreshTokenExpiresAt()
-        );
-        loginSessionRepository.save(loginSession);
+        // Refresh Token의 jti로 사용할 고유 ID 생성 후 토큰 발급
+        String refreshTokenId = UUID.randomUUID().toString();
+        TokenPair tokenPair = jwtProvider.issueTokenPair(user.getId(), refreshTokenId);
 
         return new LoginResponse(
                 tokenPair.accessToken(),
