@@ -106,31 +106,4 @@ public class AuthController {
         return ResponseEntity.ok(authService.refresh(request.refreshToken()));
     }
 
-    @PostMapping("/logout")
-    @Operation(
-            summary = "로그아웃",
-            description = "Refresh Token에 연결된 현재 로그인 세션을 폐기합니다."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "로그아웃 성공"
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Refresh Token 누락",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "유효하지 않거나 만료·폐기된 Refresh Token",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
-    })
-    public ResponseEntity<Void> logout(
-            @Valid @RequestBody RefreshTokenRequest request
-    ) {
-        authService.logout(request.refreshToken());
-        return ResponseEntity.noContent().build();
-    }
 }

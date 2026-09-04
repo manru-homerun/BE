@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.manruhomerun.yadan.auth.client.KakaoApiClient;
-import com.manruhomerun.yadan.auth.domain.entity.LoginSession;
 import com.manruhomerun.yadan.auth.dto.kakao.KakaoTokenInfoResponse;
 import com.manruhomerun.yadan.auth.dto.kakao.KakaoUserInfoResponse;
 import com.manruhomerun.yadan.auth.dto.LoginResponse;
@@ -15,10 +14,8 @@ import com.manruhomerun.yadan.auth.dto.RefreshTokenResponse;
 import com.manruhomerun.yadan.auth.error.AuthErrorCode;
 import com.manruhomerun.yadan.auth.error.exception.AuthException;
 import com.manruhomerun.yadan.auth.properties.KakaoApiProperties;
-import com.manruhomerun.yadan.auth.repository.LoginSessionRepository;
 import com.manruhomerun.yadan.auth.token.JwtProvider;
 import com.manruhomerun.yadan.auth.token.RefreshTokenClaims;
-import com.manruhomerun.yadan.auth.token.TokenHasher;
 import com.manruhomerun.yadan.auth.token.TokenPair;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.domain.enums.UserProvider;
@@ -33,9 +30,7 @@ public class AuthService {
     private final KakaoApiClient kakaoApiClient;
     private final KakaoApiProperties kakaoApiProperties;
     private final UserRepository userRepository;
-    private final LoginSessionRepository loginSessionRepository;
     private final JwtProvider jwtProvider;
-    private final TokenHasher tokenHasher;
 
     // 카카오 사용자 검증, user 생성, JWT 발급
     @Transactional
@@ -95,26 +90,6 @@ public class AuthService {
         return new RefreshTokenResponse(
                 jwtProvider.issueAccessToken(user.getId())
         );
-    }
-
-    // 로그아웃
-    @Transactional
-    public void logout(String refreshToken) {
-        RefreshTokenClaims claims = jwtProvider.verifyRefreshToken(refreshToken);
-
-        LoginSession loginSession = loginSessionRepository.findByIdAndUser_Id(
-                        claims.sessionId(),
-                        claims.userId()
-                )
-                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN));
-
-        if (loginSession.isRevoked()
-                || loginSession.isExpired()
-                || !tokenHasher.matches(refreshToken, loginSession.getRefreshTokenHash())) {
-            throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
-        }
-
-        loginSession.revoke();
     }
 
     // 기존 회원 찾기 or 새로운 회원 생성

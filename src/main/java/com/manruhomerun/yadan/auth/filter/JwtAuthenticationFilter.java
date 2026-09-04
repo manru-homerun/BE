@@ -34,8 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // Access Token 없이 호출할 수 있는 인증 API
     private static final Set<String> PUBLIC_API_PATHS = Set.of(
             "/api/auth/login",
-            "/api/auth/refresh",
-            "/api/auth/logout"
+            "/api/auth/refresh"
     );
 
     private final JwtProvider jwtProvider;
