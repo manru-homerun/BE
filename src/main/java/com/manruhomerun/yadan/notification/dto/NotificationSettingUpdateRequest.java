@@ -17,7 +17,7 @@ public record NotificationSettingUpdateRequest(
         Boolean visitVerificationReminderEnabled,
 
         @NotNull(message = "지역 경기 알림 활성화 여부는 필수입니다.")
-        @Schema(description = "지역 경기 알림 활성화 여부", example = "false")
+        @Schema(description = "지역 경기 알림 활성화 여부", example = "true")
         Boolean nearbyGameNotificationEnabled
 ) {
 }
