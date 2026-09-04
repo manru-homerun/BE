@@ -1,8 +1,6 @@
 package com.manruhomerun.yadan.auth.token;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -25,7 +23,6 @@ public class JwtProvider { // JWT 발급, 서명, 검증
     private static final String TOKEN_TYPE_CLAIM = "type";
     private static final String ACCESS_TOKEN_TYPE = "ACCESS";
     private static final String REFRESH_TOKEN_TYPE = "REFRESH";
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     private final JwtProperties properties;
     private final SecretKey accessSecretKey;
@@ -38,13 +35,12 @@ public class JwtProvider { // JWT 발급, 서명, 검증
         this.refreshSecretKey = createSecretKey(properties.getRefreshSecret());
     }
 
-    // AccessToken, RefreshToken 발급
-    public TokenPair issueTokenPair(String userId, String loginSessionId) {
+    // AccessToken 발급
+    public String issueAccessToken(String userId) {
         Instant issuedAt = Instant.now();
         Instant accessExpiresAt = issuedAt.plus(properties.getAccessExpiration());
-        Instant refreshExpiresAt = issuedAt.plus(properties.getRefreshExpiration());
 
-        String accessToken = Jwts.builder()
+        return Jwts.builder()
                 .issuer(ISSUER)
                 .subject(userId)
                 .claim(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
@@ -52,11 +48,19 @@ public class JwtProvider { // JWT 발급, 서명, 검증
                 .expiration(Date.from(accessExpiresAt))
                 .signWith(accessSecretKey)
                 .compact();
+    }
+
+    // AccessToken, RefreshToken 발급
+    public TokenPair issueTokenPair(String userId, String refreshTokenId) {
+        Instant issuedAt = Instant.now();
+        Instant refreshExpiresAt = issuedAt.plus(properties.getRefreshExpiration());
+
+        String accessToken = issueAccessToken(userId);
 
         String refreshToken = Jwts.builder()
                 .issuer(ISSUER)
                 .subject(userId)
-                .id(loginSessionId)
+                .id(refreshTokenId)
                 .claim(TOKEN_TYPE_CLAIM, REFRESH_TOKEN_TYPE)
                 .issuedAt(Date.from(issuedAt))
                 .expiration(Date.from(refreshExpiresAt))
@@ -65,8 +69,7 @@ public class JwtProvider { // JWT 발급, 서명, 검증
 
         return new TokenPair(
                 accessToken,
-                refreshToken,
-                LocalDateTime.ofInstant(refreshExpiresAt, SERVICE_ZONE_ID)
+                refreshToken
         );
     }
 
@@ -88,7 +91,7 @@ public class JwtProvider { // JWT 발급, 서명, 검증
         return userId;
     }
 
-    // RefreshToken 발급 후 userId, loginSessionId 반환
+    // RefreshToken 검증 후 userId, refreshTokenId 반환
     public RefreshTokenClaims verifyRefreshToken(String refreshToken) {
         Claims claims = parseClaims(
                 refreshToken,
@@ -99,12 +102,13 @@ public class JwtProvider { // JWT 발급, 서명, 검증
         validateTokenType(claims, REFRESH_TOKEN_TYPE, AuthErrorCode.INVALID_REFRESH_TOKEN);
 
         String userId = claims.getSubject();
-        String sessionId = claims.getId();
-        if (userId == null || userId.isBlank() || sessionId == null || sessionId.isBlank()) {
+        String refreshTokenId = claims.getId();
+        if (userId == null || userId.isBlank()
+                || refreshTokenId == null || refreshTokenId.isBlank()) {
             throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        return new RefreshTokenClaims(userId, sessionId);
+        return new RefreshTokenClaims(userId, refreshTokenId);
     }
 
     // JWT 검증 후 내부 정보 반환
