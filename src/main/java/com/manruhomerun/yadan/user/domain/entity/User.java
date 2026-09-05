@@ -38,6 +38,15 @@ import com.manruhomerun.yadan.user.domain.enums.UserProvider;
                 columnNames = "nickname"
         )
 )
+@Table(
+    name = "user",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_user_provider_provider_user_id",
+            columnNames = {"provider", "provider_user_id"}
+        )
+    }
+)
 public class User {
 
     @Id
@@ -79,6 +88,22 @@ public class User {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    public static User createOAuthUser(
+            UserProvider provider,
+            String providerUserId,
+            String nickname,
+            String profileImageUrl
+    ) {
+        return User.builder()
+                .provider(provider)
+                .providerUserId(providerUserId)
+                .nickname(nickname)
+                .profileImageUrl(profileImageUrl)
+                .onboardingCompleted(false)
+                .isDeleted(false)
+                .build();
+    }
 
     @PrePersist
     public void prePersist() {
