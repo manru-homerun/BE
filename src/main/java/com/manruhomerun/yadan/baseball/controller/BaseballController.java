@@ -48,23 +48,23 @@ public class BaseballController {
         return ResponseEntity.ok(baseballService.getGameDetail(gameId));
     }
 
-    @GetMapping("/stadiums/{stadiumId}/game-schedule")
-    @Operation(summary = "특정 구장 경기 일정 조회")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "구장 경기 일정 조회 성공", useReturnTypeSchema = true),
-            @ApiResponse(responseCode = "404", description = "구장을 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<PageResponse<BaseballGameScheduleItemResponse>> getStadiumGameSchedules(
-            @Parameter(description = "조회할 구장 ID", example = "2")
-            @PathVariable Long stadiumId,
-            @Parameter(description = "조회 기준일, 미입력 시 오늘 날짜 사용", example = "2026-06-28")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baselineDate,
-            @Parameter(description = "페이지 번호, 1부터 시작", example = "1")
-            @RequestParam(defaultValue = "1") int page
-    ) {
-        return ResponseEntity.ok(baseballService.getStadiumGameSchedules(stadiumId, baselineDate, page));
-    }
+//    @GetMapping("/stadiums/{stadiumId}/game-schedule")
+//    @Operation(summary = "특정 구장 경기 일정 조회")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "구장 경기 일정 조회 성공", useReturnTypeSchema = true),
+//            @ApiResponse(responseCode = "404", description = "구장을 찾을 수 없음",
+//                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+//    })
+//    public ResponseEntity<PageResponse<BaseballGameScheduleItemResponse>> getStadiumGameSchedules(
+//            @Parameter(description = "조회할 구장 ID", example = "2")
+//            @PathVariable Long stadiumId,
+//            @Parameter(description = "조회 기준일, 미입력 시 오늘 날짜 사용", example = "2026-06-28")
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baselineDate,
+//            @Parameter(description = "페이지 번호, 1부터 시작", example = "1")
+//            @RequestParam(defaultValue = "1") int page
+//    ) {
+//        return ResponseEntity.ok(baseballService.getStadiumGameSchedules(stadiumId, baselineDate, page));
+//    }
 
     @GetMapping("/teams/{teamId}/game-schedule")
     @Operation(summary = "특정 팀 경기 일정 조회")

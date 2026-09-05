@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,17 +104,29 @@ public class TravelSpotService {
     }
 
     @Transactional(readOnly = true)
-    public List<TravelSpotDibsItemResponse> getDibs(String userId, TravelRegionCode regionCode) {
+    public PageResponse<TravelSpotDibsItemResponse> getDibs(
+            String userId,
+            TravelRegionCode regionCode,
+            int pageNumber,
+            int pageSize
+    ) {
         userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         // 기준 지역 코드의 뒤쪽 0을 제거한 prefix로 같은 지역 소속 여행지를 조회한다.
         String regionCodePrefix = regionCode.getCodePrefix();
-
-        return dibsRepository.findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(userId, regionCodePrefix).stream()
+        Page<Dibs> dibsPage = dibsRepository
+                .findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(
+                        userId,
+                        regionCodePrefix,
+                        PageRequest.of(pageNumber - 1, pageSize)
+                );
+        List<TravelSpotDibsItemResponse> contents = dibsPage.getContent().stream()
                 .map(Dibs::getTravelSpot)
                 .map(TravelSpotDibsItemResponse::from)
                 .toList();
+
+        return PageResponse.from(dibsPage, contents);
     }
 
     @Transactional(readOnly = true)
@@ -234,4 +247,5 @@ public class TravelSpotService {
                 content
         );
     }
+
 }
