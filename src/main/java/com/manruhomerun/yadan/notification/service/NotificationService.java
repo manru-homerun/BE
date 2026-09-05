@@ -55,7 +55,7 @@ public class NotificationService {
         Notification savedNotification = notificationRepository.save(notification);
         NotificationCreatedEvent event = new NotificationCreatedEvent(savedNotification.getId());
 
-        // TODO NotificationPushListener 구현 후 이벤트 발행
+        eventPublisher.publishEvent(event);
         return savedNotification.getId();
     }
 }
