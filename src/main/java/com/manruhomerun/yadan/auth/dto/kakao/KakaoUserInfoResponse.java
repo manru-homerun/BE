@@ -18,7 +18,6 @@ public record KakaoUserInfoResponse(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record Profile(
-            String nickname,
             @JsonProperty("profile_image_url")
             String profileImageUrl
     ) {

@@ -9,6 +9,8 @@ import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 
 public interface UserRepository extends JpaRepository<User, String> {
 
+    boolean existsByNicknameAndIdNot(String nickname, String userId);
+
     Optional<User> findByProviderAndProviderUserId(
             UserProvider provider,
             String providerUserId
