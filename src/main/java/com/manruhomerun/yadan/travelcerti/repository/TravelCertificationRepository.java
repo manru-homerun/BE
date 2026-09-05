@@ -12,7 +12,7 @@ public interface TravelCertificationRepository extends JpaRepository<TravelCerti
     boolean existsByTravelUserIdAndTravelSpotId(Long travelUserId, Long travelSpotId);
 
     @Query("""
-            SELECT COUNT(DISTINCT certification.travelSpot.id)
+            SELECT COUNT(DISTINCT certification.travelSpot.travelSpot.id)
             FROM TravelCertification certification
             WHERE certification.travelUser.id = :travelUserId
             """)

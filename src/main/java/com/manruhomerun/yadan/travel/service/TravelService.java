@@ -20,6 +20,7 @@ import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
+import com.manruhomerun.yadan.travelcerti.domain.entity.TravelCertification;
 import com.manruhomerun.yadan.travelcerti.repository.TravelCertificationRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -249,13 +250,23 @@ public class TravelService {
                 () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
         TravelUser travelUser = travelUserRepository.findByTravelIdAndUserId(travelId, userId)
                 .orElseThrow(UserNotFoundException::new);
-        Set<Long> vertifiedTravelSpotMappingIds = travelCertificationRepository
-                .findAllByTravelUserId(travelUser.getId())
+        List<TravelCertification> travelCertifications = travelCertificationRepository
+                .findAllByTravelUserId(travelUser.getId());
+        Set<Long> vertifiedTravelSpotMappingIds = travelCertifications
                 .stream()
                 .map(certification -> certification.getTravelSpot().getId())
                 .collect(java.util.stream.Collectors.toSet());
+        long vertifiedSpotsCnt = travelCertifications.stream()
+                .map(certification -> certification.getTravelSpot().getTravelSpot().getId())
+                .distinct()
+                .count();
 
-        return TravelDetailResponse.from(travel, userId, vertifiedTravelSpotMappingIds);
+        return TravelDetailResponse.from(
+                travel,
+                userId,
+                vertifiedTravelSpotMappingIds,
+                vertifiedSpotsCnt
+        );
     }
 
     public List<ThemeListResponse> getTravelThemeList() {

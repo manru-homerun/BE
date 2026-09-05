@@ -45,12 +45,19 @@ public class TravelCertiService {
                         "여행 참여 정보를 찾을 수 없습니다. travelId=" + travelId + ", userId=" + userId
                 ));
 
-        // 2. 요청한 여행지가 해당 여행 일정에 포함되어 있는지 확인합니다.
+        // 2. 요청한 일차와 순서에 해당 여행지가 배치되어 있는지 확인합니다.
         TravelTravelSpot travelTravelSpot = travelTravelSpotRepository
-                .findByTravelIdAndTravelSpotId(travelId, spotId)
+                .findByTravelSchedule(travelId, spotId, request.day(), request.placementOrder())
                 .orElseThrow(() -> new TravelCertificationException(
                         TravelCertificationErrorCode.TRAVEL_SPOT_NOT_FOUND,
-                        "여행에 포함된 여행지를 찾을 수 없습니다. travelId=" + travelId + ", spotId=" + spotId
+                        "여행 일정에 포함된 여행지를 찾을 수 없습니다. travelId="
+                                + travelId
+                                + ", spotId="
+                                + spotId
+                                + ", day="
+                                + request.day()
+                                + ", placementOrder="
+                                + request.placementOrder()
                 ));
 
         // 3. 이미 인증한 여행지라면 중복 기록을 생성하지 않고 성공 처리합니다.

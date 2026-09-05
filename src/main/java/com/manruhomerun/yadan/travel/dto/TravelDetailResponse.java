@@ -53,7 +53,8 @@ public record TravelDetailResponse(
     public static TravelDetailResponse from(
             Travel travel,
             String userId,
-            Set<Long> vertifiedTravelSpotMappingIds
+            Set<Long> vertifiedTravelSpotMappingIds,
+            long vertifiedSpotsCnt
     ) {
         List<TravelUser> safeTravelUsers = travel.getTravelUserList() == null ? List.of() : travel.getTravelUserList();
         List<TravelTheme> safeTravelThemes = travel.getTravelThemeList() == null ? List.of() : travel.getTravelThemeList();
@@ -104,7 +105,7 @@ public record TravelDetailResponse(
                 travel.getRegionCode(),
                 friends,
                 isLeader,
-                vertifiedTravelSpotMappingIds.size(),
+                vertifiedSpotsCnt,
                 theme,
                 schedule
         );

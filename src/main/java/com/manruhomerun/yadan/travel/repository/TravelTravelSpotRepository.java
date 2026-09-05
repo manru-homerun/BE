@@ -15,7 +15,20 @@ import java.util.Optional;
 public interface TravelTravelSpotRepository extends JpaRepository<TravelTravelSpot, Long> {
     void deleteTravelTravelSpotsByTravel(Travel travel);
 
-    Optional<TravelTravelSpot> findByTravelIdAndTravelSpotId(String travelId, String travelSpotId);
+    @Query("""
+            SELECT travelTravelSpot
+            FROM TravelTravelSpot travelTravelSpot
+            WHERE travelTravelSpot.travel.id = :travelId
+            AND travelTravelSpot.travelSpot.id = :travelSpotId
+            AND travelTravelSpot.day = :day
+            AND travelTravelSpot.order = :placementOrder
+            """)
+    Optional<TravelTravelSpot> findByTravelSchedule(
+            @Param("travelId") String travelId,
+            @Param("travelSpotId") String travelSpotId,
+            @Param("day") int day,
+            @Param("placementOrder") int placementOrder
+    );
 
     @Query("""
             SELECT travelTravelSpot.travelSpot
