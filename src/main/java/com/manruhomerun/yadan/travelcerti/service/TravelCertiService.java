@@ -1,7 +1,11 @@
 package com.manruhomerun.yadan.travelcerti.service;
 
+import com.manruhomerun.yadan.sticker.domain.entity.StickerPack;
+import com.manruhomerun.yadan.sticker.repository.StickerPackRepository;
+import com.manruhomerun.yadan.travel.domain.entity.TravelSticker;
 import com.manruhomerun.yadan.travel.domain.entity.TravelTravelSpot;
 import com.manruhomerun.yadan.travel.domain.entity.TravelUser;
+import com.manruhomerun.yadan.travel.repository.TravelStickerRepository;
 import com.manruhomerun.yadan.travel.repository.TravelTravelSpotRepository;
 import com.manruhomerun.yadan.travel.repository.TravelUserRepository;
 import com.manruhomerun.yadan.travelcerti.domain.entity.TravelCertification;
@@ -21,6 +25,8 @@ public class TravelCertiService {
     private final TravelUserRepository travelUserRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
     private final TravelCertificationRepository travelCertificationRepository;
+    private final TravelStickerRepository travelStickerRepository;
+    private final StickerPackRepository stickerPackRepository;
 
     public void verifyTravelSpot(
             String userId,
@@ -91,5 +97,30 @@ public class TravelCertiService {
                         .travelSpot(travelTravelSpot)
                         .build()
         );
+
+        // 7. 이번 인증을 포함한 사용자의 해당 여행 방문 인증 개수를 계산합니다.
+        long certificationCount = travelCertificationRepository.countByTravelUserId(travelUser.getId());
+
+        // 8. 인증 개수가 4개를 초과하고 아직 스티커가 없다면 사용자에게 스티커팩을 지급합니다.
+        if (certificationCount > 4 && !travelStickerRepository.existsByTravelUserId(travelUser.getId())) {
+            String regionCode = travelUser.getTravel().getRegionCode();
+            int travelYear = travelUser.getTravel().getStartDate().getYear();
+            StickerPack stickerPack = stickerPackRepository
+                    .findFirstByRegionCodeAndYearOrderByIdAsc(regionCode, travelYear)
+                    .orElseThrow(() -> new TravelCertificationException(
+                            TravelCertificationErrorCode.STICKER_PACK_NOT_FOUND,
+                            "지급할 스티커팩을 찾을 수 없습니다. regionCode="
+                                    + regionCode
+                                    + ", year="
+                                    + travelYear
+                    ));
+
+            travelStickerRepository.save(
+                    TravelSticker.builder()
+                            .travelUser(travelUser)
+                            .stickerPack(stickerPack)
+                            .build()
+            );
+        }
     }
 }

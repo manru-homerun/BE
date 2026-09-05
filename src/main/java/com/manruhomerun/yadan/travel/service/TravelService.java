@@ -202,11 +202,10 @@ public class TravelService {
         if (status == null) {
             Page<TravelUser> page = travelUserRepository.findAllByUserId(userId, pageRequest);
             List<TravelListResponse> contents = page.getContent().stream()
-                    .map(TravelUser::getTravel)
-                    .map(travel -> TravelListResponse.from(
-                            travel,
+                    .map(travelUser -> TravelListResponse.from(
+                            travelUser.getTravel(),
                             userId,
-                            travelStickerRepository.existsByTravelId(travel.getId())
+                            travelStickerRepository.existsByTravelUserId(travelUser.getId())
                     ))
                     .toList();
 
@@ -214,19 +213,22 @@ public class TravelService {
         }
 
         List<TravelListResponse> filteredTravels = travelUserRepository.findAllByUserId(userId).stream()
-                .map(TravelUser::getTravel)
-                .filter(travel -> switch (status) {
-                    case PLANNING -> travel.getStartDate().isAfter(today);
-                    case IN_PROGRESS -> !travel.getStartDate().isAfter(today)
-                            && !travel.getEndDate().isBefore(today);
-                    case COMPLETED -> travel.getEndDate().isBefore(today);
+                .filter(travelUser -> switch (status) {
+                    case PLANNING -> travelUser.getTravel().getStartDate().isAfter(today);
+                    case IN_PROGRESS -> !travelUser.getTravel().getStartDate().isAfter(today)
+                            && !travelUser.getTravel().getEndDate().isBefore(today);
+                    case COMPLETED -> travelUser.getTravel().getEndDate().isBefore(today);
                 })
-                .sorted(Comparator.comparing(Travel::getStartDate).reversed()
-                        .thenComparing(Travel::getId, Comparator.reverseOrder()))
-                .map(travel -> TravelListResponse.from(
-                        travel,
+                .sorted(Comparator.comparing(
+                                (TravelUser travelUser) -> travelUser.getTravel().getStartDate()
+                        ).reversed().thenComparing(
+                                travelUser -> travelUser.getTravel().getId(),
+                                Comparator.reverseOrder()
+                        ))
+                .map(travelUser -> TravelListResponse.from(
+                        travelUser.getTravel(),
                         userId,
-                        travelStickerRepository.existsByTravelId(travel.getId())
+                        travelStickerRepository.existsByTravelUserId(travelUser.getId())
                 ))
                 .toList();
 

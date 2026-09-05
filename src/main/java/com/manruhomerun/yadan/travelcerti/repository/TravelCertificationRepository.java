@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TravelCertificationRepository extends JpaRepository<TravelCertification, Long> {
 
     boolean existsByTravelUserIdAndTravelSpotId(Long travelUserId, Long travelSpotId);
+
+    long countByTravelUserId(Long travelUserId);
 }
