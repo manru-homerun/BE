@@ -10,9 +10,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TravelTravelSpotRepository extends JpaRepository<TravelTravelSpot, Long> {
     void deleteTravelTravelSpotsByTravel(Travel travel);
+
+    Optional<TravelTravelSpot> findByTravelIdAndTravelSpotId(String travelId, String travelSpotId);
 
     @Query("""
             SELECT travelTravelSpot.travelSpot
