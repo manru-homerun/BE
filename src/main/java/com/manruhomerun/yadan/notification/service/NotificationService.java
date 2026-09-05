@@ -55,6 +55,8 @@ public class NotificationService {
         Notification savedNotification = notificationRepository.save(notification);
         NotificationCreatedEvent event = new NotificationCreatedEvent(savedNotification.getId());
 
+        // 알림 생성 이벤트 발행
+        // AFTER_COMMIT Listener가 트랜잭션 커밋 성공 후 처리
         eventPublisher.publishEvent(event);
         return savedNotification.getId();
     }

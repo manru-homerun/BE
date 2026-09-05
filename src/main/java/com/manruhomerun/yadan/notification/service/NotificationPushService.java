@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true")
-public class NotificationPushService {
+public class NotificationPushService { // 설정과 전송 대상을 확인하고 전송 지시
 
     private final NotificationRepository notificationRepository;
     private final NotificationSettingRepository notificationSettingRepository;
