@@ -50,7 +50,7 @@ public class TravelSpotController {
     })
     public ResponseEntity<PageResponse<TravelSpotSearchItemResponse>> getSpots(
             @Parameter(description = "검색어", example = "시장", required = true)
-            @RequestParam @NotBlank(message = "keyword는 필수입니다.") String keyword,
+            @RequestParam @NotBlank(message = "keyword는 필수입니다.") String searchKeyword,
             @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
             @RequestParam TravelRegionCode region,
             @Parameter(description = "페이지 번호", example = "1")
@@ -58,7 +58,7 @@ public class TravelSpotController {
             @Parameter(description = "페이지 크기", example = "10")
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "pageSize는 1 이상이어야 합니다.") int pageSize
     ) {
-        return ResponseEntity.ok(travelSpotService.getSpots(keyword, region, pageNumber, pageSize));
+        return ResponseEntity.ok(travelSpotService.getSpots(searchKeyword, region, pageNumber, pageSize));
     }
 
     @GetMapping("/{contentId}")
@@ -74,7 +74,9 @@ public class TravelSpotController {
             @Parameter(description = "외부 관광 API의 contentId", example = "2479634")
             @PathVariable String contentId
     ) {
-        return ResponseEntity.ok(travelSpotService.getSpotDetail(contentId));
+        //        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        return ResponseEntity.ok(travelSpotService.getSpotDetail(contentId, userId));
     }
 
     @GetMapping("/{contentId}/images")
@@ -144,7 +146,7 @@ public class TravelSpotController {
     })
     public ResponseEntity<List<TravelSpotDibsItemResponse>> getDibs(
             @Parameter(description = "조회할 지역", example = "BUSAN")
-            @RequestParam TravelRegionCode region,
+            @RequestParam(required = false) TravelRegionCode region,
             HttpServletRequest httpRequest
     ) {
 //        String userId = (String) httpRequest.getAttribute("userId");

@@ -36,22 +36,6 @@ public enum PreferredTravelRegionCode {
         return regionName;
     }
 
-    public String getCodePrefix() {
-        return code.replaceFirst("0+$", "");
-    }
-
-    public static PreferredTravelRegionCode fromCode(String code) {
-        for (PreferredTravelRegionCode regionCode : values()) {
-            if (regionCode.code.equals(code)) {
-                return regionCode;
-            }
-        }
-
-        throw new IllegalArgumentException(
-                "지원하지 않는 선호 여행 지역 코드입니다: " + code
-        );
-    }
-
     public static PreferredTravelRegionCode fromRegionName(String regionName) {
         for (PreferredTravelRegionCode regionCode : values()) {
             if (regionCode.regionName.equals(regionName)) {

@@ -1,0 +1,125 @@
+package com.manruhomerun.yadan.auth.service;
+
+import java.util.Objects;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.manruhomerun.yadan.auth.client.KakaoApiClient;
+import com.manruhomerun.yadan.auth.dto.kakao.KakaoTokenInfoResponse;
+import com.manruhomerun.yadan.auth.dto.kakao.KakaoUserInfoResponse;
+import com.manruhomerun.yadan.auth.dto.LoginResponse;
+import com.manruhomerun.yadan.auth.dto.RefreshTokenResponse;
+import com.manruhomerun.yadan.auth.error.AuthErrorCode;
+import com.manruhomerun.yadan.auth.error.exception.AuthException;
+import com.manruhomerun.yadan.auth.properties.KakaoApiProperties;
+import com.manruhomerun.yadan.auth.token.JwtProvider;
+import com.manruhomerun.yadan.auth.token.RefreshTokenClaims;
+import com.manruhomerun.yadan.auth.token.TokenPair;
+import com.manruhomerun.yadan.user.domain.entity.User;
+import com.manruhomerun.yadan.user.domain.enums.UserProvider;
+import com.manruhomerun.yadan.user.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final KakaoApiClient kakaoApiClient;
+    private final KakaoApiProperties kakaoApiProperties;
+    private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
+
+    // 카카오 사용자 검증, user 생성, JWT 발급
+    @Transactional
+    public LoginResponse login(UserProvider provider, String providerAccessToken) {
+        if (provider != UserProvider.KAKAO) {
+            throw new AuthException(AuthErrorCode.UNSUPPORTED_PROVIDER);
+        }
+
+        // 카카오 엑세스 토큰 조회 (토큰 검증)
+        KakaoTokenInfoResponse tokenInfo = kakaoApiClient.getTokenInfo(providerAccessToken);
+        if (tokenInfo == null
+                || tokenInfo.id() == null
+                || tokenInfo.appId() == null
+                || tokenInfo.expiresInMillis() == null
+                || tokenInfo.expiresInMillis() <= 0
+                || !Objects.equals(tokenInfo.appId(), kakaoApiProperties.getAppId())) {
+            throw new AuthException(AuthErrorCode.INVALID_KAKAO_TOKEN);
+        }
+
+        // 사용자 정보 조회
+        KakaoUserInfoResponse userInfo = kakaoApiClient.getUserInfo(providerAccessToken);
+        if (userInfo == null
+                || userInfo.id() == null
+                || !Objects.equals(tokenInfo.id(), userInfo.id())) {
+            throw new AuthException(AuthErrorCode.INVALID_KAKAO_TOKEN);
+        }
+
+        // 서비스 사용자 조회 or 생성
+        User user = findOrCreateUser(provider, userInfo);
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
+        }
+
+        // Refresh Token의 jti로 사용할 고유 ID 생성 후 토큰 발급
+        String refreshTokenId = UUID.randomUUID().toString();
+        TokenPair tokenPair = jwtProvider.issueTokenPair(user.getId(), refreshTokenId);
+
+        return new LoginResponse(
+                tokenPair.accessToken(),
+                tokenPair.refreshToken(),
+                Boolean.TRUE.equals(user.getOnboardingCompleted())
+        );
+    }
+
+    // RefreshToken 검증 + AccessToken 새로 발급
+    @Transactional
+    public RefreshTokenResponse refresh(String refreshToken) {
+        RefreshTokenClaims claims = jwtProvider.verifyRefreshToken(refreshToken);
+
+        User user = userRepository.findById(claims.userId())
+                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN));
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
+        }
+
+        return new RefreshTokenResponse(
+                jwtProvider.issueAccessToken(user.getId())
+        );
+    }
+
+    // 기존 회원 찾기 or 새로운 회원 생성
+    private User findOrCreateUser(
+            UserProvider provider,
+            KakaoUserInfoResponse userInfo
+    ) {
+        String providerUserId = String.valueOf(userInfo.id()); // 카카오 회원 id
+
+        return userRepository.findByProviderAndProviderUserId(
+                        provider,
+                        providerUserId
+                )
+                .orElseGet(() -> { // 신규 사용자는 카카오 사용자 정보조회 응답으로 채우기
+                    KakaoUserInfoResponse.Profile profile =
+                            userInfo.kakaoAccount() == null
+                                    ? null
+                                    : userInfo.kakaoAccount().profile();
+
+                    String profileImageUrl =
+                            profile == null
+                                    ? null
+                                    : profile.profileImageUrl();
+
+                    User user = User.createOAuthUser(
+                            provider,
+                            providerUserId,
+                            profileImageUrl
+                    );
+                    return userRepository.save(user);
+                });
+    }
+}
