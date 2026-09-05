@@ -2,6 +2,7 @@ package com.manruhomerun.yadan.notification.service;
 
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +10,7 @@ import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.notification.domain.entity.Notification;
 import com.manruhomerun.yadan.notification.domain.enums.NotificationType;
 import com.manruhomerun.yadan.notification.dto.NotificationResponse;
+import com.manruhomerun.yadan.notification.event.NotificationCreatedEvent;
 import com.manruhomerun.yadan.notification.repository.NotificationRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -22,6 +24,7 @@ public class NotificationService {
 
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<NotificationResponse> getNotifications(String userId) {
         userRepository.findById(userId)
@@ -49,6 +52,10 @@ public class NotificationService {
                 referenceId
         );
 
-        return notificationRepository.save(notification).getId();
+        Notification savedNotification = notificationRepository.save(notification);
+        NotificationCreatedEvent event = new NotificationCreatedEvent(savedNotification.getId());
+
+        // TODO NotificationPushListener 구현 후 이벤트 발행
+        return savedNotification.getId();
     }
 }
