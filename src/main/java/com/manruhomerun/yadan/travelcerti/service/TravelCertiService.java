@@ -58,7 +58,7 @@ public class TravelCertiService {
                 travelUser.getId(),
                 travelTravelSpot.getId()
         )) {
-            long certificationCount = travelCertificationRepository.countByTravelUserId(travelUser.getId());
+            long certificationCount = travelCertificationRepository.countVerifiedSpotsByTravelUserId(travelUser.getId());
             return new TravelSpotVerificationResponse(certificationCount);
         }
 
@@ -101,7 +101,7 @@ public class TravelCertiService {
         );
 
         // 7. 이번 인증을 포함한 사용자의 해당 여행 방문 인증 개수를 계산합니다.
-        long certificationCount = travelCertificationRepository.countByTravelUserId(travelUser.getId());
+        long certificationCount = travelCertificationRepository.countVerifiedSpotsByTravelUserId(travelUser.getId());
 
         // 8. 인증 개수가 4개를 초과하고 아직 스티커가 없다면 사용자에게 스티커팩을 지급합니다.
         if (certificationCount > 4 && !travelStickerRepository.existsByTravelUserId(travelUser.getId())) {

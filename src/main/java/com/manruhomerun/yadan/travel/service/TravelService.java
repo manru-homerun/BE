@@ -208,7 +208,7 @@ public class TravelService {
                             travelUser.getTravel(),
                             userId,
                             travelStickerRepository.existsByTravelUserId(travelUser.getId()),
-                            travelCertificationRepository.countByTravelUserId(travelUser.getId())
+                            travelCertificationRepository.countVerifiedSpotsByTravelUserId(travelUser.getId())
                     ))
                     .toList();
 
@@ -232,7 +232,7 @@ public class TravelService {
                         travelUser.getTravel(),
                         userId,
                         travelStickerRepository.existsByTravelUserId(travelUser.getId()),
-                        travelCertificationRepository.countByTravelUserId(travelUser.getId())
+                        travelCertificationRepository.countVerifiedSpotsByTravelUserId(travelUser.getId())
                 ))
                 .toList();
 
@@ -244,10 +244,18 @@ public class TravelService {
         return PageResponse.from(page, contents);
     }
 
-    public TravelDetailResponse getTravelById(String travelId) {
+    public TravelDetailResponse getTravelById(String travelId, String userId) {
         Travel travel = travelRepository.findById(travelId).orElseThrow(
                 () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
-        return TravelDetailResponse.from(travel);
+        TravelUser travelUser = travelUserRepository.findByTravelIdAndUserId(travelId, userId)
+                .orElseThrow(UserNotFoundException::new);
+        Set<Long> vertifiedTravelSpotMappingIds = travelCertificationRepository
+                .findAllByTravelUserId(travelUser.getId())
+                .stream()
+                .map(certification -> certification.getTravelSpot().getId())
+                .collect(java.util.stream.Collectors.toSet());
+
+        return TravelDetailResponse.from(travel, userId, vertifiedTravelSpotMappingIds);
     }
 
     public List<ThemeListResponse> getTravelThemeList() {

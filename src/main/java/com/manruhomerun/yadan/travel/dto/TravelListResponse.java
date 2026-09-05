@@ -32,7 +32,7 @@ public record TravelListResponse(
         boolean hasSticker,
 
         @Schema(description = "현재 사용자가 해당 여행에서 인증한 여행지 수", example = "3")
-        long vertifiedSpotsCount,
+        long vertifiedSpotsCnt,
 
         @Schema(description = "등록된 여행지 수", example = "6")
         int spotsCount,
@@ -44,7 +44,7 @@ public record TravelListResponse(
             Travel travel,
             String userId,
             boolean hasSticker,
-            long vertifiedSpotsCount
+            long vertifiedSpotsCnt
     ) {
         List<User> users = travel.getTravelUserList().stream()
                 .map(travelUser -> travelUser.getUser())
@@ -63,7 +63,7 @@ public record TravelListResponse(
                 travel.getRegionCode(),
                 isLeader,
                 hasSticker,
-                vertifiedSpotsCount,
+                vertifiedSpotsCnt,
                 travel.getTravelTravelSpotList() != null ? travel.getTravelTravelSpotList().size() : 0,
                 BaseballGameResponse.from(travel.getBaseballGame())
         );

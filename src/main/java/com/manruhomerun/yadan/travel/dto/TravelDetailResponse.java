@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Schema(description = "여행 상세 응답")
 public record TravelDetailResponse(
@@ -39,6 +40,9 @@ public record TravelDetailResponse(
         @Schema(description = "현재 사용자의 방장 여부", example = "true")
         boolean isLeader,
 
+        @Schema(description = "현재 사용자가 인증한 여행지 수", example = "3")
+        long vertifiedSpotsCnt,
+
         @Schema(description = "여행 테마 목록")
         List<String> theme,
 
@@ -47,7 +51,9 @@ public record TravelDetailResponse(
 ) {
 
     public static TravelDetailResponse from(
-            Travel travel
+            Travel travel,
+            String userId,
+            Set<Long> vertifiedTravelSpotMappingIds
     ) {
         List<TravelUser> safeTravelUsers = travel.getTravelUserList() == null ? List.of() : travel.getTravelUserList();
         List<TravelTheme> safeTravelThemes = travel.getTravelThemeList() == null ? List.of() : travel.getTravelThemeList();
@@ -60,7 +66,7 @@ public record TravelDetailResponse(
                 .toList();
 
         boolean isLeader = safeTravelUsers.stream()
-                .anyMatch(TravelUser::isLeader);
+                .anyMatch(travelUser -> userId.equals(travelUser.getUser().getId()) && travelUser.isLeader());
 
         List<String> theme = safeTravelThemes.stream()
                 .map(TravelTheme::getTheme)
@@ -81,9 +87,11 @@ public record TravelDetailResponse(
                 .map(entry -> new ScheduleResponse(
                         entry.getKey(),
                         entry.getValue().stream()
-                                .map(TravelTravelSpot::getTravelSpot)
-                                .filter(Objects::nonNull)
-                                .map(TravelSpotResponse::from)
+                                .filter(travelTravelSpot -> travelTravelSpot.getTravelSpot() != null)
+                                .map(travelTravelSpot -> TravelSpotResponse.from(
+                                        travelTravelSpot.getTravelSpot(),
+                                        vertifiedTravelSpotMappingIds.contains(travelTravelSpot.getId())
+                                ))
                                 .toList()
                 ))
                 .toList();
@@ -96,6 +104,7 @@ public record TravelDetailResponse(
                 travel.getRegionCode(),
                 friends,
                 isLeader,
+                vertifiedTravelSpotMappingIds.size(),
                 theme,
                 schedule
         );
@@ -146,14 +155,18 @@ public record TravelDetailResponse(
             String category,
 
             @Schema(description = "여행지 대표 이미지", example = "https://example.com/travel-spot.jpg", nullable = true)
-            String image
+            String image,
+
+            @Schema(description = "현재 사용자의 여행지 인증 여부", example = "true")
+            boolean isVertified
     ) {
-        public static TravelSpotResponse from(TravelSpot travelSpot) {
+        public static TravelSpotResponse from(TravelSpot travelSpot, boolean isVertified) {
             return new TravelSpotResponse(
                     travelSpot.getId(),
                     travelSpot.getName(),
                     TravelSpotCategory.getDisplayNameByContentTypeId(travelSpot.getCategory()),
-                    travelSpot.getImage()
+                    travelSpot.getImage(),
+                    isVertified
             );
         }
     }

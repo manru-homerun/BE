@@ -110,9 +110,12 @@ public class TravelController {
     public ResponseEntity<TravelDetailResponse> getSpecificTravel(
             @Parameter(description = "조회할 여행 ID", example = "1e3a5081-675e-4264-8e56-ebb659e12acd")
             @PathVariable
-            String travelId
+            String travelId,
+            HttpServletRequest httpRequest
     ){
-        return ResponseEntity.ok(travelService.getTravelById(travelId));
+        //        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        return ResponseEntity.ok(travelService.getTravelById(travelId, userId));
     }
 
     // 여행 테마 조회
