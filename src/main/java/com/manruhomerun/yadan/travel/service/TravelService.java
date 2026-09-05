@@ -20,6 +20,7 @@ import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
+import com.manruhomerun.yadan.travelcerti.repository.TravelCertificationRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -44,6 +45,7 @@ public class TravelService {
     private final BaseballGameRepository baseballGameRepository;
     private final TravelRepository travelRepository;
     private final TravelStickerRepository travelStickerRepository;
+    private final TravelCertificationRepository travelCertificationRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
     private final TravelUserRepository travelUserRepository;
     private final TravelThemeRepository travelThemeRepository;
@@ -205,7 +207,8 @@ public class TravelService {
                     .map(travelUser -> TravelListResponse.from(
                             travelUser.getTravel(),
                             userId,
-                            travelStickerRepository.existsByTravelUserId(travelUser.getId())
+                            travelStickerRepository.existsByTravelUserId(travelUser.getId()),
+                            travelCertificationRepository.countByTravelUserId(travelUser.getId())
                     ))
                     .toList();
 
@@ -228,7 +231,8 @@ public class TravelService {
                 .map(travelUser -> TravelListResponse.from(
                         travelUser.getTravel(),
                         userId,
-                        travelStickerRepository.existsByTravelUserId(travelUser.getId())
+                        travelStickerRepository.existsByTravelUserId(travelUser.getId()),
+                        travelCertificationRepository.countByTravelUserId(travelUser.getId())
                 ))
                 .toList();
 
