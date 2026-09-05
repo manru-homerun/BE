@@ -33,19 +33,16 @@ import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 @Entity
 @Table(
         name = "user",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_user_nickname",
-                columnNames = "nickname"
-        )
-)
-@Table(
-    name = "user",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_user_provider_provider_user_id",
-            columnNames = {"provider", "provider_user_id"}
-        )
-    }
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_user_nickname",
+                        columnNames = "nickname"
+                ),
+            @UniqueConstraint(
+                name = "uk_user_provider_provider_user_id",
+                columnNames = {"provider", "provider_user_id"}
+            )
+        }
 )
 public class User {
 
@@ -92,13 +89,11 @@ public class User {
     public static User createOAuthUser(
             UserProvider provider,
             String providerUserId,
-            String nickname,
             String profileImageUrl
     ) {
         return User.builder()
                 .provider(provider)
                 .providerUserId(providerUserId)
-                .nickname(nickname)
                 .profileImageUrl(profileImageUrl)
                 .onboardingCompleted(false)
                 .isDeleted(false)

@@ -109,9 +109,6 @@ public class AuthService {
                                     ? null
                                     : userInfo.kakaoAccount().profile();
 
-                    String nickname =
-                            profile == null ? null : profile.nickname();
-
                     String profileImageUrl =
                             profile == null
                                     ? null
@@ -120,7 +117,6 @@ public class AuthService {
                     User user = User.createOAuthUser(
                             provider,
                             providerUserId,
-                            nickname,
                             profileImageUrl
                     );
                     return userRepository.save(user);
