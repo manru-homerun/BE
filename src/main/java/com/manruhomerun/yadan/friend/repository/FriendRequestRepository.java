@@ -77,4 +77,21 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, Lo
             Long requestId,
             String requesterUserId
     );
+
+    // 검색된 사용자들과의 대기 중인 친구 요청 일괄 조회
+    @Query("""
+            SELECT fr
+            FROM FriendRequest fr
+            WHERE fr.status = com.manruhomerun.yadan.friend.domain.enums.FriendRequestStatus.PENDING
+              AND (
+                  (fr.firstUser.id = :currentUserId
+                      AND fr.secondUser.id IN :targetUserIds)
+                  OR (fr.secondUser.id = :currentUserId
+                      AND fr.firstUser.id IN :targetUserIds)
+              )
+            """)
+    List<FriendRequest> findPendingBetweenCurrentUserAndTargets(
+            @Param("currentUserId") String currentUserId,
+            @Param("targetUserIds") List<String> targetUserIds
+    );
 }

@@ -2,6 +2,7 @@ package com.manruhomerun.yadan.user.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,11 +10,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
+import com.manruhomerun.yadan.user.dto.NicknameCheckRequest;
+import com.manruhomerun.yadan.user.dto.NicknameCheckResponse;
 import com.manruhomerun.yadan.user.dto.OnboardingRequest;
 import com.manruhomerun.yadan.user.dto.TravelPreferenceResponse;
 import com.manruhomerun.yadan.user.dto.TravelPreferenceUpdateRequest;
 import com.manruhomerun.yadan.user.dto.UserProfileResponse;
 import com.manruhomerun.yadan.user.dto.UserProfileUpdateRequest;
+import com.manruhomerun.yadan.user.dto.UserSearchRequest;
+import com.manruhomerun.yadan.user.dto.UserSearchResponse;
 import com.manruhomerun.yadan.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,6 +59,46 @@ public class UserController {
         userService.onboard(userId, request);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/nickname/check")
+    @Operation(summary = "닉네임 중복 확인")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "닉네임 중복 확인 성공",
+                    content = @Content(schema = @Schema(implementation = NicknameCheckResponse.class))),
+            @ApiResponse(responseCode = "400", description = "닉네임 형식이 올바르지 않음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<NicknameCheckResponse> checkNickname(
+            @Valid @ModelAttribute NicknameCheckRequest request,
+            HttpServletRequest httpRequest
+    ) {
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+
+        return ResponseEntity.ok(userService.checkNickname(userId, request));
+    }
+
+    @GetMapping
+    @Operation(summary = "사용자 닉네임 검색")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "사용자 검색 성공",
+                    content = @Content(schema = @Schema(implementation = UserSearchResponse.class))),
+            @ApiResponse(responseCode = "400", description = "검색 조건이 올바르지 않음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "현재 사용자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<UserSearchResponse> searchUsers(
+            @Valid @ModelAttribute UserSearchRequest request,
+            HttpServletRequest httpRequest
+    ) {
+//        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+
+        return ResponseEntity.ok(userService.searchUsers(userId, request));
     }
 
     @GetMapping("/me/profile")
