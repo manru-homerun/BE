@@ -10,6 +10,7 @@ import com.manruhomerun.yadan.travel.repository.TravelTravelSpotRepository;
 import com.manruhomerun.yadan.travel.repository.TravelUserRepository;
 import com.manruhomerun.yadan.travelcerti.domain.entity.TravelCertification;
 import com.manruhomerun.yadan.travelcerti.dto.TravelSpotVerificationRequest;
+import com.manruhomerun.yadan.travelcerti.dto.TravelSpotVerificationResponse;
 import com.manruhomerun.yadan.travelcerti.error.TravelCertificationErrorCode;
 import com.manruhomerun.yadan.travelcerti.error.exception.TravelCertificationException;
 import com.manruhomerun.yadan.travelcerti.repository.TravelCertificationRepository;
@@ -28,7 +29,7 @@ public class TravelCertiService {
     private final TravelStickerRepository travelStickerRepository;
     private final StickerPackRepository stickerPackRepository;
 
-    public void verifyTravelSpot(
+    public TravelSpotVerificationResponse verifyTravelSpot(
             String userId,
             String travelId,
             String spotId,
@@ -57,7 +58,8 @@ public class TravelCertiService {
                 travelUser.getId(),
                 travelTravelSpot.getId()
         )) {
-            return;
+            long certificationCount = travelCertificationRepository.countByTravelUserId(travelUser.getId());
+            return new TravelSpotVerificationResponse(certificationCount);
         }
 
         // 4. 하버사인 공식을 이용해 현재 위치와 여행지 기준점 사이의 직선거리를 계산합니다.
@@ -122,5 +124,7 @@ public class TravelCertiService {
                             .build()
             );
         }
+
+        return new TravelSpotVerificationResponse(certificationCount);
     }
 }
