@@ -6,12 +6,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.manruhomerun.yadan.travelspot.domain.enums.PreferredTravelRegionCode;
-import com.manruhomerun.yadan.user.domain.converter.PreferredTravelRegionCodeConverter;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -47,8 +47,8 @@ public class TravelPreference {
     @Column(name = "travel_style_value", nullable = false)
     private Integer travelStyleValue;
 
-    @Convert(converter = PreferredTravelRegionCodeConverter.class)
-    @Column(name = "residence_region_code", nullable = false, length = 5)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "residence_region_code", nullable = false, length = 20)
     private PreferredTravelRegionCode residenceRegionCode;
 
     // 선호 지역 enum 목록의 각 값을 travel_preferred_region 테이블의 개별 행으로 저장
@@ -61,8 +61,8 @@ public class TravelPreference {
                     columnNames = {"travel_preference_id", "region_code"}
             )
     )
-    @Convert(converter = PreferredTravelRegionCodeConverter.class)
-    @Column(name = "region_code", nullable = false, length = 5)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "region_code", nullable = false, length = 20)
     private Set<PreferredTravelRegionCode> preferredRegionCodes = new HashSet<>();
 
     @Column(name = "created_at", nullable = false)
