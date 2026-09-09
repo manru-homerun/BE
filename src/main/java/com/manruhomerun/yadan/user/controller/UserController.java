@@ -74,8 +74,7 @@ public class UserController {
             @Valid @ModelAttribute NicknameCheckRequest request,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+        String userId = (String) httpRequest.getAttribute("userId");
 
         return ResponseEntity.ok(userService.checkNickname(userId, request));
     }
@@ -94,8 +93,7 @@ public class UserController {
             @Valid @ModelAttribute UserSearchRequest request,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+        String userId = (String) httpRequest.getAttribute("userId");
 
         return ResponseEntity.ok(userService.searchUsers(userId, request));
     }
