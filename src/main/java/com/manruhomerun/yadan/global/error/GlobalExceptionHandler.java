@@ -9,16 +9,26 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 
+import com.manruhomerun.yadan.global.client.DiscordWebhookClient;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final DiscordWebhookClient discordWebhookClient;
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
             MethodArgumentTypeMismatchException exception,
             HttpServletRequest request
     ) {
+        discordWebhookClient.sendServerException(request.getMethod(), request.getRequestURI(), exception);
+
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(
                         "COMMON_400_VALIDATION",
@@ -32,6 +42,8 @@ public class GlobalExceptionHandler {
             MissingServletRequestParameterException exception,
             HttpServletRequest request
     ) {
+        discordWebhookClient.sendServerException(request.getMethod(), request.getRequestURI(), exception);
+
         return ResponseEntity.badRequest()
                 .body(new ErrorResponse(
                         "COMMON_400_VALIDATION",
@@ -45,6 +57,8 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException exception,
             HttpServletRequest request
     ) {
+        discordWebhookClient.sendServerException(request.getMethod(), request.getRequestURI(), exception);
+
         String message = exception.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(fieldError -> fieldError.getDefaultMessage() == null ? "잘못된 요청입니다." : fieldError.getDefaultMessage())
@@ -63,6 +77,8 @@ public class GlobalExceptionHandler {
             BindException exception,
             HttpServletRequest request
     ) {
+        discordWebhookClient.sendServerException(request.getMethod(), request.getRequestURI(), exception);
+
         String message = exception.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(fieldError -> fieldError.getDefaultMessage() == null ? "잘못된 요청입니다." : fieldError.getDefaultMessage())
@@ -81,12 +97,31 @@ public class GlobalExceptionHandler {
             BaseException exception,
             HttpServletRequest request
     ) {
+        discordWebhookClient.sendServerException(request.getMethod(), request.getRequestURI(), exception);
+
         BaseErrorCode errorCode = exception.getErrorCode();
 
         return ResponseEntity.status(errorCode.getStatus())
                 .body(ErrorResponse.of(
                         errorCode,
                         exception.getMessage(),
+                        request.getRequestURI()
+                ));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(
+            Exception exception,
+            HttpServletRequest request
+    ) {
+        log.error("처리되지 않은 서버 예외가 발생했습니다. requestMethod={}, requestUri={}",
+                request.getMethod(), request.getRequestURI(), exception);
+        discordWebhookClient.sendServerException(request.getMethod(), request.getRequestURI(), exception);
+
+        return ResponseEntity.status(CommonErrorCode.INTERNAL_SERVER_ERROR.getStatus())
+                .body(ErrorResponse.of(
+                        CommonErrorCode.INTERNAL_SERVER_ERROR,
+                        CommonErrorCode.INTERNAL_SERVER_ERROR.getDefaultMessage(),
                         request.getRequestURI()
                 ));
     }

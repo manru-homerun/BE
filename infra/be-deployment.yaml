@@ -80,3 +80,8 @@ spec:
                   name: yadan-secret
                   key: JWT_REFRESH_SECRET
 
+            - name: DISCORD_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: DISCORD_WEBHOOK_URL

@@ -2,7 +2,8 @@ package com.manruhomerun.yadan.global.error;
 
 public enum CommonErrorCode implements BaseErrorCode {
     USER_NOT_FOUND("COMMON_USER_404", "사용자를 찾을 수 없습니다.", 404),
-    EXTERNAL_API_CALL_FAILED("COMMON_EXTERNAL_API_502", "외부 API 호출에 실패했습니다.", 502);
+    EXTERNAL_API_CALL_FAILED("COMMON_EXTERNAL_API_502", "외부 API 호출에 실패했습니다.", 502),
+    INTERNAL_SERVER_ERROR("COMMON_500", "서버 내부 오류가 발생했습니다.", 500);
 
     private final String code;
     private final String defaultMessage;
