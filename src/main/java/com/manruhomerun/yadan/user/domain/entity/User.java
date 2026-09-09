@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +31,19 @@ import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "user")
+@Table(
+        name = "user",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_user_nickname",
+                        columnNames = "nickname"
+                ),
+            @UniqueConstraint(
+                name = "uk_user_provider_provider_user_id",
+                columnNames = {"provider", "provider_user_id"}
+            )
+        }
+)
 public class User {
 
     @Id
@@ -48,7 +61,7 @@ public class User {
     @Column(name = "provider_user_id", nullable = false, length = 255)
     private String providerUserId;
 
-    @Column(length = 12)
+    @Column(length = 12, columnDefinition = "varchar(12) collate utf8mb4_bin")
     private String nickname;
 
     @Column(name = "profile_image_url", length = 255)
@@ -73,6 +86,20 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    public static User createOAuthUser(
+            UserProvider provider,
+            String providerUserId,
+            String profileImageUrl
+    ) {
+        return User.builder()
+                .provider(provider)
+                .providerUserId(providerUserId)
+                .profileImageUrl(profileImageUrl)
+                .onboardingCompleted(false)
+                .isDeleted(false)
+                .build();
+    }
+
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
@@ -89,5 +116,32 @@ public class User {
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+    }
+
+    public void completeOnboarding(
+            String nickname,
+            Gender gender,
+            LocalDate birthday,
+            BaseballTeam favoriteTeam
+    ) {
+        this.nickname = nickname;
+        this.gender = gender;
+        this.birthday = birthday;
+        this.favoriteTeam = favoriteTeam;
+        this.onboardingCompleted = true;
+    }
+
+    public void updateProfile(
+            String profileImageUrl,
+            String nickname,
+            BaseballTeam favoriteTeam,
+            LocalDate birthday,
+            Gender gender
+    ) {
+        this.profileImageUrl = profileImageUrl;
+        this.nickname = nickname;
+        this.favoriteTeam = favoriteTeam;
+        this.birthday = birthday;
+        this.gender = gender;
     }
 }

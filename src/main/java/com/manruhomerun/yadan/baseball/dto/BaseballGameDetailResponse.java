@@ -3,6 +3,7 @@ package com.manruhomerun.yadan.baseball.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballStadium;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballTeam;
@@ -12,7 +13,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record BaseballGameDetailResponse(
         @Schema(description = "경기 ID", example = "1001")
         Long gameId,
-        @Schema(description = "경기 일시", example = "2026-06-12T14:30:00")
+        @Schema(description = "경기 일시", example = "2026-06-12 14:30")
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm")
         LocalDateTime dateTime,
         @Schema(description = "원정 팀 정보")
         TeamSummary awayTeam,

@@ -22,7 +22,31 @@ public enum TravelRegionCode {
         return code;
     }
 
+    public String getCityName() {
+        return cityName;
+    }
+
     public String getCodePrefix() {
         return code.replaceFirst("0+$", "");
+    }
+
+    public static TravelRegionCode fromCode(String code) {
+        for (TravelRegionCode regionCode : values()) {
+            if (regionCode.code.equals(code)) {
+                return regionCode;
+            }
+        }
+
+        throw new IllegalArgumentException("지원하지 않는 지역 코드입니다: " + code);
+    }
+
+    public static TravelRegionCode fromCityName(String cityName) {
+        for (TravelRegionCode regionCode : values()) {
+            if (regionCode.cityName.equals(cityName)) {
+                return regionCode;
+            }
+        }
+
+        throw new IllegalArgumentException("지원하지 않는 지역 이름입니다: " + cityName);
     }
 }

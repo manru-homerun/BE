@@ -46,3 +46,37 @@ spec:
                 secretKeyRef:
                   name: yadan-secret
                   key: DB_USER
+            - name: KAKAO_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: KAKAO_APP_ID
+
+            - name: KAKAO_API_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: KAKAO_API_BASE_URL
+            - name: JWT_ACCESS_EXPIRATION
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: JWT_ACCESS_EXPIRATION
+            - name: JWT_REFRESH_EXPIRATION
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: JWT_REFRESH_EXPIRATION
+
+            - name: JWT_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: JWT_ACCESS_SECRET
+
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: JWT_REFRESH_SECRET
+
