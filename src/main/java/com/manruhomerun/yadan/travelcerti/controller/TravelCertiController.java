@@ -39,8 +39,7 @@ public class TravelCertiController {
             @Valid @RequestBody TravelSpotVerificationRequest request,
             HttpServletRequest httpRequest
     ) {
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         return ResponseEntity.ok(travelCertiService.verifyTravelSpot(userId, travelId, spotId, request));
     }
 }

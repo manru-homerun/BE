@@ -72,10 +72,10 @@ public class TravelSpotController {
     })
     public ResponseEntity<TravelSpotDetailResponse> getSpotDetail(
             @Parameter(description = "외부 관광 API의 contentId", example = "2479634")
-            @PathVariable String contentId
+            @PathVariable String contentId,
+            HttpServletRequest httpRequest
     ) {
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         return ResponseEntity.ok(travelSpotService.getSpotDetail(contentId, userId));
     }
 
@@ -111,8 +111,7 @@ public class TravelSpotController {
             @PathVariable String contentId,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         travelSpotService.createDibs(userId, contentId);
         return ResponseEntity.status(201).build();
     }
@@ -129,8 +128,7 @@ public class TravelSpotController {
             @PathVariable String contentId,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         travelSpotService.deleteDibs(userId, contentId);
         return ResponseEntity.noContent().build();
     }
@@ -155,8 +153,7 @@ public class TravelSpotController {
             int pageSize,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         return ResponseEntity.ok(travelSpotService.getDibs(userId, region, pageNumber, pageSize));
     }
 
