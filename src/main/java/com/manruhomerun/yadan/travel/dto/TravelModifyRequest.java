@@ -10,7 +10,7 @@ public record TravelModifyRequest(
         String name,
 
         @Schema(description = "경기가 관람일자 일정의 어느 인덱스 뒤에 위치하는지 표현. -1일 경우 맨 앞", example = "2")
-        Integer gameIdx,
+        Integer baseballGameAfterIdx,
 
         @Schema(description = "일차별 여행지 일정")
         List<ScheduleRequest> schedule

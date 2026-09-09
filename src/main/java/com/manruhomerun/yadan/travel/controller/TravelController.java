@@ -3,11 +3,10 @@ package com.manruhomerun.yadan.travel.controller;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
-import com.manruhomerun.yadan.travel.dto.TravelCreateRequest;
-import com.manruhomerun.yadan.travel.dto.TravelDetailResponse;
-import com.manruhomerun.yadan.travel.dto.TravelListResponse;
-import com.manruhomerun.yadan.travel.dto.TravelModifyRequest;
+import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.service.TravelService;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,7 +45,7 @@ public class TravelController {
         //        String userId = (String) httpRequest.getAttribute("userId");
         String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
         travelService.createTravel(userId, request);
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.noContent().build();
     }
 
     // 특정 여행 수정
@@ -117,7 +116,7 @@ public class TravelController {
     }
 
     // 여행 테마 조회
-    @GetMapping("/theme")
+    @GetMapping("/themes")
     @Operation(summary = "여행 테마 목록 조회")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행 테마 목록 조회 성공", useReturnTypeSchema = true)
@@ -125,6 +124,44 @@ public class TravelController {
     public ResponseEntity<?> getTravelThemeList(
     ){
         return ResponseEntity.ok(travelService.getTravelThemeList());
+    }
+
+    @PostMapping("/align")
+    @Operation(summary = "여행 코스 정렬")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "여행 코스 정렬 성공",
+                    content = @Content(schema = @Schema(implementation = TravelAlignResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "경기 또는 여행지를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<TravelAlignResponse> getAlignedTravelList(@RequestBody TravelAlignRequest request){
+        return ResponseEntity.ok(travelService.getAlignedTravelList(request));
+    }
+
+    @PostMapping("/generate")
+    public ResponseEntity<Void> generateTravelCourse(@RequestBody TravelGenerateRequest request) {
+        travelService.generateTravelCourse(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/popular-spots")
+    @Operation(summary = "인기 여행지 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인기 여행지 조회 성공",
+                    content = @Content(schema = @Schema(implementation = PopularTravelSpotResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 지역 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<PopularTravelSpotResponse> getPopularSpots(
+            @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
+            @RequestParam TravelRegionCode region,
+            HttpServletRequest httpRequest
+    ){
+        //        String userId = (String) httpRequest.getAttribute("userId");
+        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        return ResponseEntity.ok(travelService.getPopularSpots(region, userId));
     }
 
 }

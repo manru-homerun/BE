@@ -110,7 +110,7 @@ public record TravelDetailResponse(
             Integer day,
 
             @Schema(description = "경기가 관람일자 일정의 어느 인덱스 뒤에 위치하는지 표현. -1일 경우 맨 앞", example = "2")
-            int gameIdx
+            int baseballGameAfterIdx
     ) {
         public static BaseballGameResponse from(Travel travel) {
             BaseballGame baseballGame = travel.getBaseballGame() == null ? null : travel.getBaseballGame();
