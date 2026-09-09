@@ -18,6 +18,35 @@ public class DiscordWebhookClient {
 
     private final GlobalProperties globalProperties;
 
+    public void sendServerLifecycle(String lifecycle) {
+        String discordWebhookUrl = globalProperties.getWebhookUrl();
+
+        if (discordWebhookUrl == null || discordWebhookUrl.isBlank()) {
+            log.warn("디스코드 웹훅 URL이 비어 있어 서버 상태 알림을 전송하지 않습니다. lifecycle={}", lifecycle);
+            return;
+        }
+
+        String message = """
+                [야단법석 백엔드 서버 %s]
+                시각: %s
+                """.formatted(
+                lifecycle,
+                LocalDateTime.now(ZoneId.of("Asia/Seoul"))
+                        .format(DateTimeFormatter.ofPattern("yyyy년 M월 d일 HH시 mm분"))
+        );
+
+        try {
+            RestClient.create()
+                    .post()
+                    .uri(discordWebhookUrl)
+                    .body(new DiscordWebhookRequest(message))
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (Exception exception) {
+            log.error("디스코드 서버 상태 웹훅 전송에 실패했습니다. lifecycle={}", lifecycle, exception);
+        }
+    }
+
     public void sendServerException(String requestMethod, String requestUri, Throwable throwable) {
         String discordWebhookUrl = globalProperties.getWebhookUrl();
 
