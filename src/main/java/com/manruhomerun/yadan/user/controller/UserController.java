@@ -49,8 +49,7 @@ public class UserController {
             @Valid @RequestBody OnboardingRequest request,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+        String userId = (String) httpRequest.getAttribute("userId");
         userService.onboard(userId, request);
 
         return ResponseEntity.noContent().build();
@@ -65,8 +64,7 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<UserProfileResponse> getProfile(HttpServletRequest httpRequest) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+        String userId = (String) httpRequest.getAttribute("userId");
 
         return ResponseEntity.ok(userService.getProfile(userId));
     }
@@ -80,8 +78,7 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<TravelPreferenceResponse> getPreference(HttpServletRequest httpRequest) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+        String userId = (String) httpRequest.getAttribute("userId");
 
         return ResponseEntity.ok(userService.getPreference(userId));
     }
@@ -100,8 +97,7 @@ public class UserController {
             @Valid @RequestBody TravelPreferenceUpdateRequest request,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+        String userId = (String) httpRequest.getAttribute("userId");
 
         return ResponseEntity.ok(userService.updatePreference(userId, request));
     }
@@ -122,8 +118,7 @@ public class UserController {
             @Valid @RequestBody UserProfileUpdateRequest request,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 인증 연동 전 임시 사용자 ID
+        String userId = (String) httpRequest.getAttribute("userId");
 
         return ResponseEntity.ok(userService.updateProfile(userId, request));
     }
