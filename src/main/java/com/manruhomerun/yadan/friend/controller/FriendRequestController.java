@@ -49,9 +49,8 @@ public class FriendRequestController {
             @Valid @RequestBody FriendRequestCreateRequest request,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
-        friendRequestService.createRequest(userId, request);
+        String requesterUserId = (String) httpRequest.getAttribute("userId");
+        friendRequestService.createRequest(requesterUserId, request);
         return ResponseEntity.status(201).build();
     }
 
@@ -64,8 +63,7 @@ public class FriendRequestController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<ReceivedFriendRequestListResponse> getReceivedRequests(HttpServletRequest httpRequest) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         return ResponseEntity.ok(friendRequestService.getReceivedRequests(userId));
     }
 
@@ -78,8 +76,7 @@ public class FriendRequestController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<SentFriendRequestListResponse> getSentRequests(HttpServletRequest httpRequest) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         return ResponseEntity.ok(friendRequestService.getSentRequests(userId));
     }
 
@@ -96,8 +93,7 @@ public class FriendRequestController {
             @PathVariable Long requestId,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         friendRequestService.acceptRequest(userId, requestId);
         return ResponseEntity.noContent().build(); // 204
     }
@@ -115,8 +111,7 @@ public class FriendRequestController {
             @PathVariable Long requestId,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         friendRequestService.rejectRequest(userId, requestId);
         return ResponseEntity.noContent().build();
     }
@@ -134,8 +129,7 @@ public class FriendRequestController {
             @PathVariable Long requestId,
             HttpServletRequest httpRequest
     ) {
-//        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         friendRequestService.cancelRequest(userId, requestId);
         return ResponseEntity.noContent().build();
     }
