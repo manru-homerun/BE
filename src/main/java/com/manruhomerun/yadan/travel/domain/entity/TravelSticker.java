@@ -15,11 +15,11 @@ public class TravelSticker {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "travel_id", nullable = false)
-    private Travel travel;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "travel_user_mapping_id", nullable = false)
+    private TravelUser travelUser;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sticker_pack_id", nullable = false)
     private StickerPack stickerPack;
 }

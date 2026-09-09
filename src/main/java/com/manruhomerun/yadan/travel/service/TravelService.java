@@ -20,6 +20,8 @@ import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
+import com.manruhomerun.yadan.travelcerti.domain.entity.TravelCertification;
+import com.manruhomerun.yadan.travelcerti.repository.TravelCertificationRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -44,6 +46,7 @@ public class TravelService {
     private final BaseballGameRepository baseballGameRepository;
     private final TravelRepository travelRepository;
     private final TravelStickerRepository travelStickerRepository;
+    private final TravelCertificationRepository travelCertificationRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
     private final TravelUserRepository travelUserRepository;
     private final TravelThemeRepository travelThemeRepository;
@@ -202,11 +205,11 @@ public class TravelService {
         if (status == null) {
             Page<TravelUser> page = travelUserRepository.findAllByUserId(userId, pageRequest);
             List<TravelListResponse> contents = page.getContent().stream()
-                    .map(TravelUser::getTravel)
-                    .map(travel -> TravelListResponse.from(
-                            travel,
+                    .map(travelUser -> TravelListResponse.from(
+                            travelUser.getTravel(),
                             userId,
-                            travelStickerRepository.existsByTravelId(travel.getId())
+                            travelStickerRepository.existsByTravelUserId(travelUser.getId()),
+                            travelCertificationRepository.countVerifiedSpotsByTravelUserId(travelUser.getId())
                     ))
                     .toList();
 
@@ -214,19 +217,23 @@ public class TravelService {
         }
 
         List<TravelListResponse> filteredTravels = travelUserRepository.findAllByUserId(userId).stream()
-                .map(TravelUser::getTravel)
-                .filter(travel -> switch (status) {
-                    case PLANNING -> travel.getStartDate().isAfter(today);
-                    case IN_PROGRESS -> !travel.getStartDate().isAfter(today)
-                            && !travel.getEndDate().isBefore(today);
-                    case COMPLETED -> travel.getEndDate().isBefore(today);
+                .filter(travelUser -> switch (status) {
+                    case PLANNING -> travelUser.getTravel().getStartDate().isAfter(today);
+                    case IN_PROGRESS -> !travelUser.getTravel().getStartDate().isAfter(today)
+                            && !travelUser.getTravel().getEndDate().isBefore(today);
+                    case COMPLETED -> travelUser.getTravel().getEndDate().isBefore(today);
                 })
-                .sorted(Comparator.comparing(Travel::getStartDate).reversed()
-                        .thenComparing(Travel::getId, Comparator.reverseOrder()))
-                .map(travel -> TravelListResponse.from(
-                        travel,
+                .sorted(Comparator.comparing(
+                                (TravelUser travelUser) -> travelUser.getTravel().getStartDate()
+                        ).reversed().thenComparing(
+                                travelUser -> travelUser.getTravel().getId(),
+                                Comparator.reverseOrder()
+                        ))
+                .map(travelUser -> TravelListResponse.from(
+                        travelUser.getTravel(),
                         userId,
-                        travelStickerRepository.existsByTravelId(travel.getId())
+                        travelStickerRepository.existsByTravelUserId(travelUser.getId()),
+                        travelCertificationRepository.countVerifiedSpotsByTravelUserId(travelUser.getId())
                 ))
                 .toList();
 
@@ -238,10 +245,28 @@ public class TravelService {
         return PageResponse.from(page, contents);
     }
 
-    public TravelDetailResponse getTravelById(String travelId) {
+    public TravelDetailResponse getTravelById(String travelId, String userId) {
         Travel travel = travelRepository.findById(travelId).orElseThrow(
                 () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
-        return TravelDetailResponse.from(travel);
+        TravelUser travelUser = travelUserRepository.findByTravelIdAndUserId(travelId, userId)
+                .orElseThrow(UserNotFoundException::new);
+        List<TravelCertification> travelCertifications = travelCertificationRepository
+                .findAllByTravelUserId(travelUser.getId());
+        Set<Long> vertifiedTravelSpotMappingIds = travelCertifications
+                .stream()
+                .map(certification -> certification.getTravelSpot().getId())
+                .collect(java.util.stream.Collectors.toSet());
+        long vertifiedSpotsCnt = travelCertifications.stream()
+                .map(certification -> certification.getTravelSpot().getTravelSpot().getId())
+                .distinct()
+                .count();
+
+        return TravelDetailResponse.from(
+                travel,
+                userId,
+                vertifiedTravelSpotMappingIds,
+                vertifiedSpotsCnt
+        );
     }
 
     public List<ThemeListResponse> getTravelThemeList() {

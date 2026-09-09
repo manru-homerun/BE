@@ -40,10 +40,10 @@ public class TravelController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<Void> createTravel(
-            @RequestBody TravelCreateRequest request
+            @RequestBody TravelCreateRequest request,
+            HttpServletRequest httpRequest
     ){
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         travelService.createTravel(userId, request);
         return ResponseEntity.noContent().build();
     }
@@ -62,10 +62,10 @@ public class TravelController {
             @Parameter(description = "수정할 여행 ID", example = "1e3a5081-675e-4264-8e56-ebb659e12acd")
             @PathVariable
             String travelId,
-            @RequestBody TravelModifyRequest request
+            @RequestBody TravelModifyRequest request,
+            HttpServletRequest httpRequest
     ){
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
 
         travelService.updateTravel(travelId, userId, request);
         return ResponseEntity.noContent().build();
@@ -93,8 +93,7 @@ public class TravelController {
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "pageSize는 1 이상이어야 합니다.")
             int pageSize
     ){
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpServletRequest.getAttribute("userId");
         return ResponseEntity.ok(travelService.getTravelList(userId, status, pageNumber, pageSize));
     }
 
@@ -110,9 +109,11 @@ public class TravelController {
     public ResponseEntity<TravelDetailResponse> getSpecificTravel(
             @Parameter(description = "조회할 여행 ID", example = "1e3a5081-675e-4264-8e56-ebb659e12acd")
             @PathVariable
-            String travelId
+            String travelId,
+            HttpServletRequest httpRequest
     ){
-        return ResponseEntity.ok(travelService.getTravelById(travelId));
+        String userId = (String) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(travelService.getTravelById(travelId, userId));
     }
 
     // 여행 테마 조회
@@ -159,8 +160,7 @@ public class TravelController {
             @RequestParam TravelRegionCode region,
             HttpServletRequest httpRequest
     ){
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         return ResponseEntity.ok(travelService.getPopularSpots(region, userId));
     }
 
