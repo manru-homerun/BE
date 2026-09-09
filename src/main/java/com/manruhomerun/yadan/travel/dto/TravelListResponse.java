@@ -35,7 +35,7 @@ public record TravelListResponse(
         long vertifiedSpotsCnt,
 
         @Schema(description = "등록된 여행지 수", example = "6")
-        int spotsCount,
+        int spotsCnt,
 
         @Schema(description = "직관 경기 정보")
         BaseballGameResponse baseballGame
