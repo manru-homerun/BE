@@ -85,3 +85,6 @@ spec:
                 secretKeyRef:
                   name: yadan-secret
                   key: DISCORD_WEBHOOK_URL
+
+            - name: DISCORD_WEBHOOK_ENABLED
+              value: "true"

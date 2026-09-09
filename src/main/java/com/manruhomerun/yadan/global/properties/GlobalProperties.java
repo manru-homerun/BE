@@ -9,4 +9,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "env.global")
 public class GlobalProperties {
     private final String webhookUrl;
+    private final boolean webhookEnabled;
 }

@@ -19,6 +19,10 @@ public class DiscordWebhookClient {
     private final GlobalProperties globalProperties;
 
     public void sendServerLifecycle(String lifecycle) {
+        if (!globalProperties.isWebhookEnabled()) {
+            return;
+        }
+
         String discordWebhookUrl = globalProperties.getWebhookUrl();
 
         if (discordWebhookUrl == null || discordWebhookUrl.isBlank()) {
@@ -48,6 +52,10 @@ public class DiscordWebhookClient {
     }
 
     public void sendServerException(String requestMethod, String requestUri, Throwable throwable) {
+        if (!globalProperties.isWebhookEnabled()) {
+            return;
+        }
+
         String discordWebhookUrl = globalProperties.getWebhookUrl();
 
         if (discordWebhookUrl == null || discordWebhookUrl.isBlank()) {
@@ -85,6 +93,10 @@ public class DiscordWebhookClient {
     }
 
     public void sendCrawlingFailure(String jobName, Throwable throwable) {
+        if (!globalProperties.isWebhookEnabled()) {
+            return;
+        }
+
         String discordWebhookUrl = globalProperties.getWebhookUrl();
 
         if (discordWebhookUrl == null || discordWebhookUrl.isBlank()) {
