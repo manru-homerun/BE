@@ -17,6 +17,7 @@ import com.manruhomerun.yadan.auth.properties.KakaoApiProperties;
 import com.manruhomerun.yadan.auth.token.JwtProvider;
 import com.manruhomerun.yadan.auth.token.RefreshTokenClaims;
 import com.manruhomerun.yadan.auth.token.TokenPair;
+import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -90,6 +91,19 @@ public class AuthService {
         return new RefreshTokenResponse(
                 jwtProvider.issueAccessToken(user.getId())
         );
+    }
+
+    // 서비스 회원 탈퇴(소프트 삭제 및 개인정보 초기화)
+    @Transactional
+    public void withdrawal(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
+        }
+
+        user.withdraw();
     }
 
     // 기존 회원 찾기 or 새로운 회원 생성
