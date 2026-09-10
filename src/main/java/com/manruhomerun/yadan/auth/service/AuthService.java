@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.manruhomerun.yadan.auth.client.KakaoApiClient;
 import com.manruhomerun.yadan.auth.dto.kakao.KakaoTokenInfoResponse;
+import com.manruhomerun.yadan.auth.dto.kakao.KakaoUnlinkResponse;
 import com.manruhomerun.yadan.auth.dto.kakao.KakaoUserInfoResponse;
 import com.manruhomerun.yadan.auth.dto.LoginResponse;
 import com.manruhomerun.yadan.auth.dto.RefreshTokenResponse;
@@ -101,6 +102,19 @@ public class AuthService {
 
         if (Boolean.TRUE.equals(user.getIsDeleted())) {
             throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
+        }
+
+        if (user.getProvider() != UserProvider.KAKAO) {
+            throw new AuthException(AuthErrorCode.UNSUPPORTED_PROVIDER);
+        }
+
+        String providerUserId = user.getProviderUserId();
+        KakaoUnlinkResponse unlinkResponse = kakaoApiClient.unlink(providerUserId);
+
+        if (unlinkResponse == null
+                || unlinkResponse.id() == null
+                || !Objects.equals(String.valueOf(unlinkResponse.id()), providerUserId)) {
+            throw new AuthException(AuthErrorCode.KAKAO_UNLINK_FAILED);
         }
 
         user.withdraw();

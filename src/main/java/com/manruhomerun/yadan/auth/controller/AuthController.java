@@ -137,7 +137,7 @@ public class AuthController {
     @DeleteMapping("/withdrawal")
     @Operation(
             summary = "회원 탈퇴",
-            description = "서비스 회원을 소프트 삭제하고 개인정보를 초기화합니다."
+            description = "카카오 계정 연결을 해제한 뒤 서비스 회원을 소프트 삭제하고 개인정보를 초기화합니다."
     )
     @SecurityRequirement(name = BEARER_AUTH)
     @ApiResponses(value = {
@@ -150,6 +150,11 @@ public class AuthController {
             @ApiResponse(
                     responseCode = "403",
                     description = "이미 탈퇴한 회원",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "502",
+                    description = "카카오 계정 연결 해제 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
