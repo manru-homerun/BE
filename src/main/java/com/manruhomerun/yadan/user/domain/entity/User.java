@@ -149,6 +149,11 @@ public class User {
     }
 
     public void withdraw() {
+        if (Boolean.TRUE.equals(this.isDeleted)) {
+            return;
+        }
+
+        this.providerUserId = "withdrawn:" + this.id;
         this.isDeleted = true;
         this.deletedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         this.nickname = null;
