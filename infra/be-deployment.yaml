@@ -51,6 +51,11 @@ spec:
                 secretKeyRef:
                   name: yadan-secret
                   key: KAKAO_APP_ID
+            - name: KAKAO_ADMIN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: KAKAO_ADMIN_KEY
 
             - name: KAKAO_API_BASE_URL
               valueFrom:

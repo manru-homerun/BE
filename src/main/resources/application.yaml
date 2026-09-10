@@ -37,6 +37,7 @@ env:
   kakao:
     app-id: ${KAKAO_APP_ID}
     api-base-url: ${KAKAO_API_BASE_URL:https://kapi.kakao.com}
+    admin-key: ${KAKAO_ADMIN_KEY:}
   jwt:
     access-secret: ${JWT_ACCESS_SECRET}
     refresh-secret: ${JWT_REFRESH_SECRET}

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.manruhomerun.yadan.auth.client.KakaoApiClient;
 import com.manruhomerun.yadan.auth.dto.kakao.KakaoTokenInfoResponse;
+import com.manruhomerun.yadan.auth.dto.kakao.KakaoUnlinkResponse;
 import com.manruhomerun.yadan.auth.dto.kakao.KakaoUserInfoResponse;
 import com.manruhomerun.yadan.auth.dto.LoginResponse;
 import com.manruhomerun.yadan.auth.dto.RefreshTokenResponse;
@@ -17,6 +18,7 @@ import com.manruhomerun.yadan.auth.properties.KakaoApiProperties;
 import com.manruhomerun.yadan.auth.token.JwtProvider;
 import com.manruhomerun.yadan.auth.token.RefreshTokenClaims;
 import com.manruhomerun.yadan.auth.token.TokenPair;
+import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -90,6 +92,32 @@ public class AuthService {
         return new RefreshTokenResponse(
                 jwtProvider.issueAccessToken(user.getId())
         );
+    }
+
+    // 서비스 회원 탈퇴(소프트 삭제 및 개인정보 초기화)
+    @Transactional
+    public void withdrawal(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
+        }
+
+        if (user.getProvider() != UserProvider.KAKAO) {
+            throw new AuthException(AuthErrorCode.UNSUPPORTED_PROVIDER);
+        }
+
+        String providerUserId = user.getProviderUserId();
+        KakaoUnlinkResponse unlinkResponse = kakaoApiClient.unlink(providerUserId);
+
+        if (unlinkResponse == null
+                || unlinkResponse.id() == null
+                || !Objects.equals(String.valueOf(unlinkResponse.id()), providerUserId)) {
+            throw new AuthException(AuthErrorCode.KAKAO_UNLINK_FAILED);
+        }
+
+        user.withdraw();
     }
 
     // 기존 회원 찾기 or 새로운 회원 생성

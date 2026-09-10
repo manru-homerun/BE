@@ -8,7 +8,8 @@ public enum AuthErrorCode implements BaseErrorCode {
     INVALID_ACCESS_TOKEN("AUTH_401_INVALID_ACCESS_TOKEN", "유효하지 않은 액세스 토큰입니다.", 401),
     INVALID_REFRESH_TOKEN("AUTH_401_INVALID_REFRESH_TOKEN", "유효하지 않은 리프레시 토큰입니다.", 401),
     INVALID_KAKAO_TOKEN("AUTH_401_INVALID_KAKAO_TOKEN", "유효하지 않은 카카오 액세스 토큰입니다.", 401),
-    KAKAO_API_CALL_FAILED("AUTH_502_KAKAO_API_CALL_FAILED", "카카오 API 호출에 실패했습니다.", 502);
+    KAKAO_API_CALL_FAILED("AUTH_502_KAKAO_API_CALL_FAILED", "카카오 API 호출에 실패했습니다.", 502),
+    KAKAO_UNLINK_FAILED("AUTH_502_KAKAO_UNLINK_FAILED", "카카오 계정 연결 해제에 실패했습니다.", 502);
 
     private final String code;
     private final String defaultMessage;
