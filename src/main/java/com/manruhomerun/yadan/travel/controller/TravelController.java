@@ -1,5 +1,6 @@
 package com.manruhomerun.yadan.travel.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
@@ -143,9 +144,12 @@ public class TravelController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<Void> generateTravelCourse(@RequestBody TravelGenerateRequest request) {
-        travelService.generateTravelCourse(request);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<JsonNode> generateTravelCourse(
+            @RequestBody TravelGenerateRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(travelService.generateTravelCourse(userId, request));
     }
 
     @GetMapping("/popular-spots")

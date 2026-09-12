@@ -1,15 +1,18 @@
 package com.manruhomerun.yadan.travel.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballStadium;
 import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
 import com.manruhomerun.yadan.baseball.error.exception.BaseballGameNotFoundException;
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
 import com.manruhomerun.yadan.global.client.ExternalApiClient;
+import com.manruhomerun.yadan.global.client.AiApiClient;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travel.domain.entity.*;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
+import com.manruhomerun.yadan.travel.domain.enums.CompanionCondition;
 import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
 import com.manruhomerun.yadan.travel.error.exception.ThemeNotFoundException;
@@ -25,7 +28,11 @@ import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
 import com.manruhomerun.yadan.travelcerti.domain.entity.TravelCertification;
 import com.manruhomerun.yadan.travelcerti.repository.TravelCertificationRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
+import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
+import com.manruhomerun.yadan.user.error.UserErrorCode;
+import com.manruhomerun.yadan.user.error.exception.UserException;
 import com.manruhomerun.yadan.user.repository.UserRepository;
+import com.manruhomerun.yadan.user.repository.TravelPreferenceRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
@@ -53,9 +60,11 @@ public class TravelService {
     private final TravelUserRepository travelUserRepository;
     private final ThemeRepository themeRepository;
     private final UserRepository userRepository;
+    private final TravelPreferenceRepository travelPreferenceRepository;
     private final TravelSpotRepository travelSpotRepository;
     private final DibsRepository dibsRepository;
     private final ExternalApiClient externalApiClient;
+    private final AiApiClient aiApiClient;
 
     //private final TravelSpotService travelSpotService;
 
@@ -485,8 +494,40 @@ public class TravelService {
         return 6_371_000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
     }
 
-    public void generateTravelCourse(TravelGenerateRequest request){
-        // AI 논의 후 작성 예정
+    public JsonNode generateTravelCourse(String userId, TravelGenerateRequest request){
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND));
+
+        LocalDate currentDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        int koreanAge = currentDate.getYear() - user.getBirthday().getYear() + 1;
+        String travelStyleValue = String.valueOf(travelPreference.getTravelStyleValue());
+        String travelPersona = String.valueOf(request.theme());
+        Set<CompanionCondition> companionConditions = request.companionConditions() == null
+                ? Set.of()
+                : new HashSet<>(request.companionConditions());
+
+        // AI 서버 명세에 맞춰 사용자 취향과 여행 생성 입력을 하나의 요청으로 조합한다.
+        AiTravelGenerateRequest aiRequest = new AiTravelGenerateRequest(
+                request.regionCode(),
+                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to()) + 1),
+                travelPersona,
+                String.valueOf(koreanAge / 10 * 10),
+                user.getGender().getDisplayName(),
+                travelStyleValue,
+                travelPreference.getPreferredRegionCodes().stream()
+                        .map(preferredRegionCode -> preferredRegionCode.getCode())
+                        .sorted()
+                        .toList(),
+                travelPreference.getResidenceRegionCode().getCode(),
+                companionConditions.contains(CompanionCondition.CHILD),
+                companionConditions.contains(CompanionCondition.ELDERLY),
+                companionConditions.contains(CompanionCondition.WHEELCHAIR),
+                request.companionCount()
+        );
+
+        return aiApiClient.generateTravel(aiRequest, JsonNode.class);
     }
 
     public PopularTravelSpotResponse getPopularSpots(
