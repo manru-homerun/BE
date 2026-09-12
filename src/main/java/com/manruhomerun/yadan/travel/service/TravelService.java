@@ -499,10 +499,9 @@ public class TravelService {
     ){
         LocalDate oneWeekAgo = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(7);
         PageRequest limit = PageRequest.of(0, 5);
-        String regionCode = region == null ? null : region.getCode();
         List<TravelSpot> popularTravelSpots = travelTravelSpotRepository
                 .findPopularTravelSpotsByRegionCodeAndCategoryAndEndDateAfter(
-                        regionCode,
+                        region.getCode(),
                         category.getContentTypeId(),
                         oneWeekAgo,
                         limit
@@ -511,7 +510,7 @@ public class TravelService {
         if (popularTravelSpots.isEmpty()) {
             popularTravelSpots = travelTravelSpotRepository
                     .findPopularTravelSpotsByRegionCodeAndCategory(
-                            regionCode,
+                            region.getCode(),
                             category.getContentTypeId(),
                             limit
                     );

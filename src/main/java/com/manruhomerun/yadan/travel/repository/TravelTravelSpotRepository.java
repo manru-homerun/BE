@@ -34,7 +34,7 @@ public interface TravelTravelSpotRepository extends JpaRepository<TravelTravelSp
             SELECT travelTravelSpot.travelSpot
             FROM Travel travel
             JOIN travel.travelTravelSpotList travelTravelSpot
-            WHERE (:regionCode IS NULL OR travel.regionCode = :regionCode)
+            WHERE travel.regionCode = :regionCode
             AND travelTravelSpot.travelSpot.category = :category
             AND travel.endDate >= :from
             GROUP BY travelTravelSpot.travelSpot
@@ -51,7 +51,7 @@ public interface TravelTravelSpotRepository extends JpaRepository<TravelTravelSp
             SELECT travelTravelSpot.travelSpot
             FROM Travel travel
             JOIN travel.travelTravelSpotList travelTravelSpot
-            WHERE (:regionCode IS NULL OR travel.regionCode = :regionCode)
+            WHERE travel.regionCode = :regionCode
             AND travelTravelSpot.travelSpot.category = :category
             GROUP BY travelTravelSpot.travelSpot
             ORDER BY COUNT(travel.id) DESC, MAX(travel.endDate) DESC

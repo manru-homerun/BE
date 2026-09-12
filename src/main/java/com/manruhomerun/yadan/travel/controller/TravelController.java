@@ -157,8 +157,8 @@ public class TravelController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<PopularTravelSpotResponse> getPopularSpots(
-            @Parameter(description = "조회할 지역", example = "BUSAN")
-            @RequestParam(required = false) TravelRegionCode region,
+            @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
+            @RequestParam TravelRegionCode region,
             @Parameter(description = "조회할 여행지 카테고리", example = "TOURIST_ATTRACTION", required = true)
             @RequestParam TravelSpotCategory category,
             HttpServletRequest httpRequest

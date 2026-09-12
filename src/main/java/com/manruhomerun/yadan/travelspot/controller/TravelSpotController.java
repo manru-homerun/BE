@@ -144,10 +144,10 @@ public class TravelSpotController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<PageResponse<TravelSpotDibsItemResponse>> getDibs(
-            @Parameter(description = "조회할 지역", example = "BUSAN")
+            @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
             @RequestParam TravelRegionCode region,
-            @Parameter(description = "조회할 여행지 카테고리", example = "TOURIST_ATTRACTION")
-            @RequestParam(required = false) TravelSpotCategory category,
+            @Parameter(description = "조회할 여행지 카테고리", example = "TOURIST_ATTRACTION", required = true)
+            @RequestParam TravelSpotCategory category,
             @Parameter(description = "페이지 번호", example = "1")
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "pageNumber는 1 이상이어야 합니다.")
             int pageNumber,
