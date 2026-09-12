@@ -107,6 +107,7 @@ public class TravelSpotService {
     public PageResponse<TravelSpotDibsItemResponse> getDibs(
             String userId,
             TravelRegionCode regionCode,
+            TravelSpotCategory category,
             int pageNumber,
             int pageSize
     ) {
@@ -115,11 +116,18 @@ public class TravelSpotService {
 
         // 기준 지역 코드의 뒤쪽 0을 제거한 prefix로 같은 지역 소속 여행지를 조회한다.
         String regionCodePrefix = regionCode.getCodePrefix();
-        Page<Dibs> dibsPage = dibsRepository
-                .findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(
+        PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize);
+        Page<Dibs> dibsPage = category == null
+                ? dibsRepository.findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(
                         userId,
                         regionCodePrefix,
-                        PageRequest.of(pageNumber - 1, pageSize)
+                        pageRequest
+                )
+                : dibsRepository.findByUserIdAndTravelSpotRegionCodeStartingWithAndTravelSpotCategoryOrderByCreatedAtDescIdDesc(
+                        userId,
+                        regionCodePrefix,
+                        category.getContentTypeId(),
+                        pageRequest
                 );
         List<TravelSpotDibsItemResponse> contents = dibsPage.getContent().stream()
                 .map(Dibs::getTravelSpot)

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDetailResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotSearchItemResponse;
@@ -145,6 +146,8 @@ public class TravelSpotController {
     public ResponseEntity<PageResponse<TravelSpotDibsItemResponse>> getDibs(
             @Parameter(description = "조회할 지역", example = "BUSAN")
             @RequestParam TravelRegionCode region,
+            @Parameter(description = "조회할 여행지 카테고리", example = "TOURIST_ATTRACTION")
+            @RequestParam(required = false) TravelSpotCategory category,
             @Parameter(description = "페이지 번호", example = "1")
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "pageNumber는 1 이상이어야 합니다.")
             int pageNumber,
@@ -154,7 +157,7 @@ public class TravelSpotController {
             HttpServletRequest httpRequest
     ) {
         String userId = (String) httpRequest.getAttribute("userId");
-        return ResponseEntity.ok(travelSpotService.getDibs(userId, region, pageNumber, pageSize));
+        return ResponseEntity.ok(travelSpotService.getDibs(userId, region, category, pageNumber, pageSize));
     }
 
 }
