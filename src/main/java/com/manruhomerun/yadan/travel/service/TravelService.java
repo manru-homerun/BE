@@ -12,6 +12,7 @@ import com.manruhomerun.yadan.travel.domain.entity.*;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
 import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
+import com.manruhomerun.yadan.travel.error.exception.ThemeNotFoundException;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
 import com.manruhomerun.yadan.travel.repository.*;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
@@ -50,7 +51,6 @@ public class TravelService {
     private final TravelCertificationRepository travelCertificationRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
     private final TravelUserRepository travelUserRepository;
-    private final TravelThemeRepository travelThemeRepository;
     private final ThemeRepository themeRepository;
     private final UserRepository userRepository;
     private final TravelSpotRepository travelSpotRepository;
@@ -107,6 +107,13 @@ public class TravelService {
             throw new UserNotFoundException();
         }
 
+        Theme theme = themeRepository.findById(request.theme()).orElseThrow(
+                () -> new ThemeNotFoundException(
+                        TravelErrorCode.THEME_NOT_FOUND,
+                        "여행 테마를 찾을 수 없습니다. themeId=" + request.theme()
+                )
+        );
+
         Travel travel = Travel.builder()
                 .startDate(request.from())
                 .endDate(request.to())
@@ -114,6 +121,7 @@ public class TravelService {
                 .gameIdx(request.baseballGame().baseballGameAfterIdx())
                 .baseballGame(baseballGame)
                 .regionCode(request.regionCode())
+                .theme(theme)
                 .build();
         travelRepository.save(travel);
 
@@ -132,15 +140,6 @@ public class TravelService {
                 .user(leader)
                 .isLeader(true)
                 .build());
-
-        // 여행 테마와의 연관관계 저장
-        themeRepository.findAllById(request.theme())
-                .stream().map(
-                theme -> TravelTheme.builder()
-                        .travel(travel)
-                        .theme(theme)
-                        .build()
-        ).forEach(travelThemeRepository::save);
 
         // 관광지와의 연관관계 저장
         for(TravelCreateRequest.ScheduleRequest schedule : request.schedule()) {
@@ -271,9 +270,7 @@ public class TravelService {
     }
 
     public List<ThemeListResponse> getTravelThemeList() {
-        List<Theme> themes = themeRepository.findAll();
-        Collections.sort(themes, Comparator.comparingInt(Theme::getOrder));
-        return themes.stream()
+        return themeRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
                 .map(ThemeListResponse::from)
                 .toList();
     }

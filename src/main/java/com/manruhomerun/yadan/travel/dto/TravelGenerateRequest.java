@@ -29,8 +29,8 @@ public record TravelGenerateRequest(
         @Schema(description = "함께 가는 친구 ID 목록", example = "[\"jamy\", \"lida\"]")
         List<String> friends,
 
-        @Schema(description = "여행 테마 ID 목록", example = "[2, 3]")
-        List<Long> theme,
+        @Schema(description = "여행 테마 ID", example = "2")
+        Long theme,
 
         @Schema(description = "여행지 ID 목록", example = "[239764, 233464, 232264]")
         List<Long> travelSpotIdList

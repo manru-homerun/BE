@@ -27,8 +27,9 @@ public class Travel {
     @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
     private List<TravelTravelSpot> travelTravelSpotList;
 
-    @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
-    private List<TravelTheme> travelThemeList;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "theme_id", nullable = false)
+    private Theme theme;
 
     @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
     private List<TravelUser> travelUserList;
