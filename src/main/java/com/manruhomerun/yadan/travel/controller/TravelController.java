@@ -6,6 +6,7 @@ import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
 import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.service.TravelService;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -158,10 +159,12 @@ public class TravelController {
     public ResponseEntity<PopularTravelSpotResponse> getPopularSpots(
             @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
             @RequestParam TravelRegionCode region,
+            @Parameter(description = "조회할 여행지 카테고리", example = "TOURIST_ATTRACTION", required = true)
+            @RequestParam TravelSpotCategory category,
             HttpServletRequest httpRequest
     ){
         String userId = (String) httpRequest.getAttribute("userId");
-        return ResponseEntity.ok(travelService.getPopularSpots(region, userId));
+        return ResponseEntity.ok(travelService.getPopularSpots(region, category, userId));
     }
 
 }

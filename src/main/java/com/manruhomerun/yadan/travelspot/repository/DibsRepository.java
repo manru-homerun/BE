@@ -17,4 +17,11 @@ public interface DibsRepository extends JpaRepository<Dibs, Long> {
             String regionCodePrefix,
             Pageable pageable
     );
+
+    Page<Dibs> findByUserIdAndTravelSpotRegionCodeStartingWithAndTravelSpotCategoryOrderByCreatedAtDescIdDesc(
+            String userId,
+            String regionCodePrefix,
+            Integer category,
+            Pageable pageable
+    );
 }
