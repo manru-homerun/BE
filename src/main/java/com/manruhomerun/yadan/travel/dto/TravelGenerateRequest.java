@@ -1,5 +1,6 @@
 package com.manruhomerun.yadan.travel.dto;
 
+import com.manruhomerun.yadan.travel.domain.enums.CompanionCondition;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
@@ -21,6 +22,9 @@ public record TravelGenerateRequest(
 
         @Schema(description = "무장애 여행지 우선 여부", example = "true")
         boolean barrierFree,
+
+        @Schema(description = "동행 조건 목록", example = "[\"CHILD\", \"WHEELCHAIR\"]")
+        List<CompanionCondition> companionConditions,
 
         @Schema(description = "함께 가는 친구 ID 목록", example = "[\"jamy\", \"lida\"]")
         List<String> friends,
