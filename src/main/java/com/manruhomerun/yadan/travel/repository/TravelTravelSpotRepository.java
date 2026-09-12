@@ -34,13 +34,15 @@ public interface TravelTravelSpotRepository extends JpaRepository<TravelTravelSp
             SELECT travelTravelSpot.travelSpot
             FROM Travel travel
             JOIN travel.travelTravelSpotList travelTravelSpot
-            WHERE travel.regionCode = :regionCode
+            WHERE (:regionCode IS NULL OR travel.regionCode = :regionCode)
+            AND travelTravelSpot.travelSpot.category = :category
             AND travel.endDate >= :from
             GROUP BY travelTravelSpot.travelSpot
             ORDER BY COUNT(travel.id) DESC, MAX(travel.endDate) DESC
             """)
-    List<TravelSpot> findPopularTravelSpotsByRegionCodeAndEndDateAfter(
+    List<TravelSpot> findPopularTravelSpotsByRegionCodeAndCategoryAndEndDateAfter(
             @Param("regionCode") String regionCode,
+            @Param("category") Integer category,
             @Param("from") LocalDate from,
             Pageable pageable
     );
@@ -49,12 +51,14 @@ public interface TravelTravelSpotRepository extends JpaRepository<TravelTravelSp
             SELECT travelTravelSpot.travelSpot
             FROM Travel travel
             JOIN travel.travelTravelSpotList travelTravelSpot
-            WHERE travel.regionCode = :regionCode
+            WHERE (:regionCode IS NULL OR travel.regionCode = :regionCode)
+            AND travelTravelSpot.travelSpot.category = :category
             GROUP BY travelTravelSpot.travelSpot
             ORDER BY COUNT(travel.id) DESC, MAX(travel.endDate) DESC
             """)
-    List<TravelSpot> findPopularTravelSpotsByRegionCode(
+    List<TravelSpot> findPopularTravelSpotsByRegionCodeAndCategory(
             @Param("regionCode") String regionCode,
+            @Param("category") Integer category,
             Pageable pageable
     );
 }

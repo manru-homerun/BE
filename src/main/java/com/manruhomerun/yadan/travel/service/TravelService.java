@@ -16,6 +16,7 @@ import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
 import com.manruhomerun.yadan.travel.repository.*;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
@@ -491,15 +492,29 @@ public class TravelService {
         // AI 논의 후 작성 예정
     }
 
-    public PopularTravelSpotResponse getPopularSpots(TravelRegionCode region, String userId){
+    public PopularTravelSpotResponse getPopularSpots(
+            TravelRegionCode region,
+            TravelSpotCategory category,
+            String userId
+    ){
         LocalDate oneWeekAgo = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(7);
         PageRequest limit = PageRequest.of(0, 5);
+        String regionCode = region == null ? null : region.getCode();
         List<TravelSpot> popularTravelSpots = travelTravelSpotRepository
-                .findPopularTravelSpotsByRegionCodeAndEndDateAfter(region.getCode(), oneWeekAgo, limit);
+                .findPopularTravelSpotsByRegionCodeAndCategoryAndEndDateAfter(
+                        regionCode,
+                        category.getContentTypeId(),
+                        oneWeekAgo,
+                        limit
+                );
 
         if (popularTravelSpots.isEmpty()) {
             popularTravelSpots = travelTravelSpotRepository
-                    .findPopularTravelSpotsByRegionCode(region.getCode(), limit);
+                    .findPopularTravelSpotsByRegionCodeAndCategory(
+                            regionCode,
+                            category.getContentTypeId(),
+                            limit
+                    );
         }
 
         List<PopularTravelSpotResponse.ContentResponse> contents = popularTravelSpots.stream()
