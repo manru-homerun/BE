@@ -90,7 +90,7 @@ public class TravelSpotService {
                         .sorted()
                         .toList(),
                 travelPreference.getResidenceRegionCode().getCode().substring(0, 2),
-                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to())),
+                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to()) + 1),
                 request.theme(),
                 String.valueOf(travelPreference.getTravelStyleValue())
         );
