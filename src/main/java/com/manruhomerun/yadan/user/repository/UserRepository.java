@@ -1,5 +1,6 @@
 package com.manruhomerun.yadan.user.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,19 @@ import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 
 public interface UserRepository extends JpaRepository<User, String> {
+
+    @EntityGraph(attributePaths = "favoriteTeam")
+    @Query("""
+            SELECT u
+            FROM User u
+            WHERE u.favoriteTeam.id IN :teamIds
+              AND u.onboardingCompleted = true
+              AND u.isDeleted = false
+            ORDER BY u.id ASC
+            """)
+    List<User> findWeeklyTeamScheduleNotificationTargets(
+            @Param("teamIds") Collection<Long> teamIds
+    );
 
     boolean existsByNicknameAndIdNot(String nickname, String userId);
 
