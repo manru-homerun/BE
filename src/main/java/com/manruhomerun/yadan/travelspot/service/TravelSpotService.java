@@ -338,7 +338,8 @@ public class TravelSpotService {
                 .map(TravelSpotSearchItemResponse::from)
                 .toList();
 
-        int resolvedPageSize = response.response().body().numOfRows() == null ? pageSize : response.response().body().numOfRows();
+        Integer responsePageSize = response.response().body().numOfRows();
+        int resolvedPageSize = responsePageSize != null && responsePageSize > 0 ? responsePageSize : pageSize;
         long totalElements = response.response().body().totalCount() == null ? 0 : response.response().body().totalCount();
 
         return PageResponse.from(
