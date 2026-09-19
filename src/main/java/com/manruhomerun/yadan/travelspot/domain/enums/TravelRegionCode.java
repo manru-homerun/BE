@@ -27,7 +27,7 @@ public enum TravelRegionCode {
     }
 
     public String getCodePrefix() {
-        return code.replaceFirst("0+$", "");
+        return code.substring(0, 2);
     }
 
     public static TravelRegionCode fromCode(String code) {
