@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
+import com.manruhomerun.yadan.global.error.exception.ExternalApiCallException;
 import com.manruhomerun.yadan.global.properties.GlobalProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +79,21 @@ public class DiscordWebhookClient {
                 throwable.getClass().getSimpleName(),
                 throwable.getMessage()
         );
+
+        // 디스코드 메시지 길이 제한 안에서 외부 응답을 함께 전송한다.
+        if (throwable instanceof ExternalApiCallException externalApiException
+                && externalApiException.getResponseBody() != null
+                && !externalApiException.getResponseBody().isBlank()) {
+            String responsePrefix = "외부 API 응답: ";
+            int availableLength = 2000 - message.length() - responsePrefix.length();
+            if (availableLength > 0) {
+                String responseBody = externalApiException.getResponseBody();
+                message += responsePrefix + responseBody.substring(0, Math.min(responseBody.length(), availableLength));
+            }
+        }
+        if (message.length() > 2000) {
+            message = message.substring(0, 2000);
+        }
 
         try {
             RestClient.create()
