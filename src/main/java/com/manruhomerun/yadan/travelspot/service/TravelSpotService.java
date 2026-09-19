@@ -310,9 +310,9 @@ public class TravelSpotService {
         queryParams.put("lDongRegnCd", regionCode.substring(0, 2));
 
         String signguCode = regionCode.substring(2);
-        if (!"000".equals(signguCode)) {
-            queryParams.put("lDongSignguCd", signguCode);
-        }
+        // if (!"000".equals(signguCode)) {
+        //     queryParams.put("lDongSignguCd", signguCode);
+        // }
 
         TourApiSearchKeywordResponse response = externalApiClient.get(
                 "/searchKeyword2",
