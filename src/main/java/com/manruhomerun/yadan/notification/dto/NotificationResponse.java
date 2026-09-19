@@ -22,7 +22,7 @@ public record NotificationResponse(
         String body,
 
         @Schema(
-                description = "알림 클릭 시 조회할 대상 리소스 ID",
+                description = "알림 클릭 시 조회할 대상 리소스 ID. WEEKLY_TEAM_SCHEDULE은 응원팀 ID",
                 example = "123",
                 nullable = true
         )

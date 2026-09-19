@@ -73,7 +73,8 @@ public class NotificationPushService { // 설정과 전송 대상을 확인하�
 
         return switch (notificationType) {
             case FRIEND_REQUEST, FRIEND_REQUEST_ACCEPTED -> true;
-            case TICKET_OPEN -> Boolean.TRUE.equals(setting.getTicketOpenNotificationEnabled());
+            case TICKET_OPEN, WEEKLY_TEAM_SCHEDULE ->
+                    Boolean.TRUE.equals(setting.getTicketOpenNotificationEnabled());
             case VISIT_VERIFICATION_REMINDER ->
                     Boolean.TRUE.equals(setting.getVisitVerificationReminderEnabled());
             case NEARBY_GAME -> Boolean.TRUE.equals(setting.getNearbyGameNotificationEnabled());
