@@ -51,12 +51,32 @@ spec:
                 secretKeyRef:
                   name: yadan-secret
                   key: KAKAO_APP_ID
+            - name: KAKAO_ADMIN_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: KAKAO_ADMIN_KEY
 
             - name: KAKAO_API_BASE_URL
               valueFrom:
                 secretKeyRef:
                   name: yadan-secret
                   key: KAKAO_API_BASE_URL
+            - name: AI_API_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: AI_API_BASE_URL
+            - name: TOUR_API_KOR_SERVICE_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: TOUR_API_KOR_SERVICE_BASE_URL
+            - name: TOUR_API_SERVICE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: TOUR_API_SERVICE_KEY
             - name: JWT_ACCESS_EXPIRATION
               valueFrom:
                 secretKeyRef:
@@ -80,3 +100,11 @@ spec:
                   name: yadan-secret
                   key: JWT_REFRESH_SECRET
 
+            - name: DISCORD_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: DISCORD_WEBHOOK_URL
+
+            - name: DISCORD_WEBHOOK_ENABLED
+              value: "true"

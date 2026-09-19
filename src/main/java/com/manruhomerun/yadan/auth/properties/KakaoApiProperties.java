@@ -12,4 +12,5 @@ public class KakaoApiProperties {
 
     private final Long appId;
     private final String apiBaseUrl;
+    private final String adminKey;
 }

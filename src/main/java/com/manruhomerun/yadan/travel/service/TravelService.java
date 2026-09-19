@@ -5,23 +5,36 @@ import com.manruhomerun.yadan.baseball.domain.entity.BaseballStadium;
 import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
 import com.manruhomerun.yadan.baseball.error.exception.BaseballGameNotFoundException;
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
+import com.manruhomerun.yadan.friend.error.FriendErrorCode;
+import com.manruhomerun.yadan.friend.error.exception.FriendException;
+import com.manruhomerun.yadan.friend.repository.FriendRepository;
 import com.manruhomerun.yadan.global.client.ExternalApiClient;
+import com.manruhomerun.yadan.global.client.AiApiClient;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travel.domain.entity.*;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
+import com.manruhomerun.yadan.travel.domain.enums.CompanionCondition;
 import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
+import com.manruhomerun.yadan.travel.error.exception.ThemeNotFoundException;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
 import com.manruhomerun.yadan.travel.repository.*;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
+import com.manruhomerun.yadan.travelcerti.domain.entity.TravelCertification;
+import com.manruhomerun.yadan.travelcerti.repository.TravelCertificationRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
+import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
+import com.manruhomerun.yadan.user.error.UserErrorCode;
+import com.manruhomerun.yadan.user.error.exception.UserException;
 import com.manruhomerun.yadan.user.repository.UserRepository;
+import com.manruhomerun.yadan.user.repository.TravelPreferenceRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
@@ -44,14 +57,17 @@ public class TravelService {
     private final BaseballGameRepository baseballGameRepository;
     private final TravelRepository travelRepository;
     private final TravelStickerRepository travelStickerRepository;
+    private final TravelCertificationRepository travelCertificationRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
     private final TravelUserRepository travelUserRepository;
-    private final TravelThemeRepository travelThemeRepository;
     private final ThemeRepository themeRepository;
     private final UserRepository userRepository;
+    private final FriendRepository friendRepository;
+    private final TravelPreferenceRepository travelPreferenceRepository;
     private final TravelSpotRepository travelSpotRepository;
     private final DibsRepository dibsRepository;
     private final ExternalApiClient externalApiClient;
+    private final AiApiClient aiApiClient;
 
     //private final TravelSpotService travelSpotService;
 
@@ -103,6 +119,19 @@ public class TravelService {
             throw new UserNotFoundException();
         }
 
+        // 요청한 모든 동행자가 방장과 실제 친구 관계인지 확인한다.
+        if (!friendIds.isEmpty() && friendRepository.findAllBetweenCurrentUserAndTargets(
+                userId, new ArrayList<>(friendIds)).size() != friendIds.size()) {
+            throw new FriendException(FriendErrorCode.FRIEND_NOT_FOUND);
+        }
+
+        Theme theme = themeRepository.findById(request.theme()).orElseThrow(
+                () -> new ThemeNotFoundException(
+                        TravelErrorCode.THEME_NOT_FOUND,
+                        "여행 테마를 찾을 수 없습니다. themeId=" + request.theme()
+                )
+        );
+
         Travel travel = Travel.builder()
                 .startDate(request.from())
                 .endDate(request.to())
@@ -110,6 +139,7 @@ public class TravelService {
                 .gameIdx(request.baseballGame().baseballGameAfterIdx())
                 .baseballGame(baseballGame)
                 .regionCode(request.regionCode())
+                .theme(theme)
                 .build();
         travelRepository.save(travel);
 
@@ -128,15 +158,6 @@ public class TravelService {
                 .user(leader)
                 .isLeader(true)
                 .build());
-
-        // 여행 테마와의 연관관계 저장
-        themeRepository.findAllById(request.theme())
-                .stream().map(
-                theme -> TravelTheme.builder()
-                        .travel(travel)
-                        .theme(theme)
-                        .build()
-        ).forEach(travelThemeRepository::save);
 
         // 관광지와의 연관관계 저장
         for(TravelCreateRequest.ScheduleRequest schedule : request.schedule()) {
@@ -202,11 +223,11 @@ public class TravelService {
         if (status == null) {
             Page<TravelUser> page = travelUserRepository.findAllByUserId(userId, pageRequest);
             List<TravelListResponse> contents = page.getContent().stream()
-                    .map(TravelUser::getTravel)
-                    .map(travel -> TravelListResponse.from(
-                            travel,
+                    .map(travelUser -> TravelListResponse.from(
+                            travelUser.getTravel(),
                             userId,
-                            travelStickerRepository.existsByTravelId(travel.getId())
+                            travelStickerRepository.existsByTravelUserId(travelUser.getId()),
+                            travelCertificationRepository.countVerifiedSpotsByTravelUserId(travelUser.getId())
                     ))
                     .toList();
 
@@ -214,19 +235,23 @@ public class TravelService {
         }
 
         List<TravelListResponse> filteredTravels = travelUserRepository.findAllByUserId(userId).stream()
-                .map(TravelUser::getTravel)
-                .filter(travel -> switch (status) {
-                    case PLANNING -> travel.getStartDate().isAfter(today);
-                    case IN_PROGRESS -> !travel.getStartDate().isAfter(today)
-                            && !travel.getEndDate().isBefore(today);
-                    case COMPLETED -> travel.getEndDate().isBefore(today);
+                .filter(travelUser -> switch (status) {
+                    case PLANNING -> travelUser.getTravel().getStartDate().isAfter(today);
+                    case IN_PROGRESS -> !travelUser.getTravel().getStartDate().isAfter(today)
+                            && !travelUser.getTravel().getEndDate().isBefore(today);
+                    case COMPLETED -> travelUser.getTravel().getEndDate().isBefore(today);
                 })
-                .sorted(Comparator.comparing(Travel::getStartDate).reversed()
-                        .thenComparing(Travel::getId, Comparator.reverseOrder()))
-                .map(travel -> TravelListResponse.from(
-                        travel,
+                .sorted(Comparator.comparing(
+                                (TravelUser travelUser) -> travelUser.getTravel().getStartDate()
+                        ).reversed().thenComparing(
+                                travelUser -> travelUser.getTravel().getId(),
+                                Comparator.reverseOrder()
+                        ))
+                .map(travelUser -> TravelListResponse.from(
+                        travelUser.getTravel(),
                         userId,
-                        travelStickerRepository.existsByTravelId(travel.getId())
+                        travelStickerRepository.existsByTravelUserId(travelUser.getId()),
+                        travelCertificationRepository.countVerifiedSpotsByTravelUserId(travelUser.getId())
                 ))
                 .toList();
 
@@ -238,16 +263,32 @@ public class TravelService {
         return PageResponse.from(page, contents);
     }
 
-    public TravelDetailResponse getTravelById(String travelId) {
+    public TravelDetailResponse getTravelById(String travelId, String userId) {
         Travel travel = travelRepository.findById(travelId).orElseThrow(
                 () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
-        return TravelDetailResponse.from(travel);
+        TravelUser travelUser = travelUserRepository.findByTravelIdAndUserId(travelId, userId)
+                .orElseThrow(UserNotFoundException::new);
+        List<TravelCertification> travelCertifications = travelCertificationRepository
+                .findAllByTravelUserId(travelUser.getId());
+        Set<Long> vertifiedTravelSpotMappingIds = travelCertifications
+                .stream()
+                .map(certification -> certification.getTravelSpot().getId())
+                .collect(java.util.stream.Collectors.toSet());
+        long vertifiedSpotsCnt = travelCertifications.stream()
+                .map(certification -> certification.getTravelSpot().getTravelSpot().getId())
+                .distinct()
+                .count();
+
+        return TravelDetailResponse.from(
+                travel,
+                userId,
+                vertifiedTravelSpotMappingIds,
+                vertifiedSpotsCnt
+        );
     }
 
     public List<ThemeListResponse> getTravelThemeList() {
-        List<Theme> themes = themeRepository.findAll();
-        Collections.sort(themes, Comparator.comparingInt(Theme::getOrder));
-        return themes.stream()
+        return themeRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
                 .map(ThemeListResponse::from)
                 .toList();
     }
@@ -462,19 +503,91 @@ public class TravelService {
         return 6_371_000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
     }
 
-    public void generateTravelCourse(TravelGenerateRequest request){
-        // AI 논의 후 작성 예정
+    public TravelAlignResponse generateTravelCourse(String userId, TravelGenerateRequest request){
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        Set<String> friendIds = request.friends() == null ? Set.of() : new HashSet<>(request.friends());
+        // 코스를 생성하기 전에 요청한 동행자 모두와의 친구 관계를 확인한다.
+        if (!friendIds.isEmpty() && friendRepository.findAllBetweenCurrentUserAndTargets(
+                userId, new ArrayList<>(friendIds)).size() != friendIds.size()) {
+            throw new FriendException(FriendErrorCode.FRIEND_NOT_FOUND);
+        }
+        TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND));
+
+        LocalDate currentDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        int koreanAge = currentDate.getYear() - user.getBirthday().getYear() + 1;
+        String travelStyleValue = String.valueOf(travelPreference.getTravelStyleValue());
+        String travelPersona = String.valueOf(request.theme());
+        Set<CompanionCondition> companionConditions = request.companionConditions() == null
+                ? Set.of()
+                : new HashSet<>(request.companionConditions());
+
+        // AI 서버 명세에 맞춰 사용자 취향과 여행 생성 입력을 하나의 요청으로 조합한다.
+        AiTravelGenerateRequest aiRequest = new AiTravelGenerateRequest(
+                request.regionCode(),
+                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to()) + 1),
+                travelPersona,
+                String.valueOf(koreanAge / 10 * 10),
+                user.getGender().getDisplayName(),
+                travelStyleValue,
+                travelPreference.getPreferredRegionCodes().stream()
+                        .map(preferredRegionCode -> preferredRegionCode.getCode())
+                        .sorted()
+                        .toList(),
+                travelPreference.getResidenceRegionCode().getCode(),
+                companionConditions.contains(CompanionCondition.CHILD),
+                companionConditions.contains(CompanionCondition.ELDERLY),
+                companionConditions.contains(CompanionCondition.WHEELCHAIR),
+                request.friends() == null ? 0 : request.friends().size(),
+                request.travelSpotIdList()
+        );
+
+        AiTravelGenerateResponse aiResponse = aiApiClient.generateTravel(aiRequest, AiTravelGenerateResponse.class);
+
+        // AI의 일차·방문 순서를 정렬 API 입력 형식으로 옮긴다.
+        long travelDuration = ChronoUnit.DAYS.between(request.from(), request.to()) + 1;
+        List<TravelAlignRequest.ScheduleRequest> schedules = new ArrayList<>();
+        for (int day = 1; day <= travelDuration; day++) {
+            int currentDay = day;
+            List<String> travelSpotIds = aiResponse.steps().stream()
+                    .filter(step -> step.dayIndex() == currentDay)
+                    .sorted(Comparator.comparingInt(AiTravelGenerateResponse.StepResponse::slotIndex))
+                    .map(AiTravelGenerateResponse.StepResponse::contentId)
+                    .toList();
+            schedules.add(new TravelAlignRequest.ScheduleRequest(day, travelSpotIds));
+        }
+
+        return getAlignedTravelList(new TravelAlignRequest(
+                request.from(),
+                request.to(),
+                new TravelAlignRequest.BaseballGameRequest(request.baseballGameId()),
+                schedules
+        ));
     }
 
-    public PopularTravelSpotResponse getPopularSpots(TravelRegionCode region, String userId){
+    public PopularTravelSpotResponse getPopularSpots(
+            TravelRegionCode region,
+            TravelSpotCategory category,
+            String userId
+    ){
         LocalDate oneWeekAgo = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(7);
         PageRequest limit = PageRequest.of(0, 5);
         List<TravelSpot> popularTravelSpots = travelTravelSpotRepository
-                .findPopularTravelSpotsByRegionCodeAndEndDateAfter(region.getCode(), oneWeekAgo, limit);
+                .findPopularTravelSpotsByRegionCodeAndCategoryAndEndDateAfter(
+                        region.getCode(),
+                        category.getContentTypeId(),
+                        oneWeekAgo,
+                        limit
+                );
 
         if (popularTravelSpots.isEmpty()) {
             popularTravelSpots = travelTravelSpotRepository
-                    .findPopularTravelSpotsByRegionCode(region.getCode(), limit);
+                    .findPopularTravelSpotsByRegionCodeAndCategory(
+                            region.getCode(),
+                            category.getContentTypeId(),
+                            limit
+                    );
         }
 
         List<PopularTravelSpotResponse.ContentResponse> contents = popularTravelSpots.stream()

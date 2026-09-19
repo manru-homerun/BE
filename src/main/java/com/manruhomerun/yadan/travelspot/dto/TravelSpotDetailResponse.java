@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record TravelSpotDetailResponse(
         @Schema(description = "여행지 ID", example = "2479634")
         String id,
-        @Schema(description = "여행지 카테고리", example = "축제·공연·행사", nullable = true)
+        @Schema(description = "여행지 카테고리", example = "축제/공연/행사", nullable = true)
         String category,
         @Schema(description = "여행지 제목", example = "2023 제20회 대한민국향토식문화대전(&남북음식문화축제)")
         String name,

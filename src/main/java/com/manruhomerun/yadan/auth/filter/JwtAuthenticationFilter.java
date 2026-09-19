@@ -15,6 +15,8 @@ import com.manruhomerun.yadan.auth.error.exception.AuthException;
 import com.manruhomerun.yadan.auth.token.JwtProvider;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.global.error.BaseErrorCode;
+import com.manruhomerun.yadan.user.domain.entity.User;
+import com.manruhomerun.yadan.user.repository.UserRepository;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -38,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     );
 
     private final JwtProvider jwtProvider;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
     // 인증이 필요하지 않은 요청이면 필터 실행 생략
@@ -62,10 +65,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String accessToken = resolveAccessToken(request);
             String userId = jwtProvider.verifyAccessToken(accessToken);
 
+            validateActiveUser(userId);
+
             request.setAttribute(USER_ID_ATTRIBUTE, userId);
             filterChain.doFilter(request, response);
         } catch (AuthException exception) {
             writeErrorResponse(request, response, exception);
+        }
+    }
+
+    // 탈퇴했거나 존재하지 않는 사용자의 기존 Access Token 차단
+    private void validateActiveUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_ACCESS_TOKEN));
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
         }
     }
 

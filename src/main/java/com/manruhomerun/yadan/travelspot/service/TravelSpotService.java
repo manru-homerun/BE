@@ -1,10 +1,15 @@
 package com.manruhomerun.yadan.travelspot.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Page;
@@ -13,8 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.manruhomerun.yadan.global.client.ExternalApiClient;
+import com.manruhomerun.yadan.global.client.AiApiClient;
 import com.manruhomerun.yadan.global.dto.PageResponse;
+import com.manruhomerun.yadan.global.error.exception.ExternalApiCallException;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
+import com.manruhomerun.yadan.travel.domain.enums.CompanionCondition;
+import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import com.manruhomerun.yadan.travelspot.domain.entity.Dibs;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
@@ -22,15 +31,22 @@ import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailCommonResponse;
 import com.manruhomerun.yadan.travelspot.dto.TourApiDetailImageResponse;
 import com.manruhomerun.yadan.travelspot.dto.TourApiSearchKeywordResponse;
+import com.manruhomerun.yadan.travelspot.dto.AiTravelSpotRecommendRequest;
+import com.manruhomerun.yadan.travelspot.dto.AiTravelSpotRecommendResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDetailResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotSearchItemResponse;
+import com.manruhomerun.yadan.travelspot.dto.TravelSpotSuggestionRequest;
 import com.manruhomerun.yadan.travelspot.error.TravelSpotErrorCode;
 import com.manruhomerun.yadan.travelspot.error.exception.TravelSpotException;
 import com.manruhomerun.yadan.travelspot.repository.DibsRepository;
 import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
+import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
+import com.manruhomerun.yadan.user.error.UserErrorCode;
+import com.manruhomerun.yadan.user.error.exception.UserException;
 import com.manruhomerun.yadan.user.repository.UserRepository;
+import com.manruhomerun.yadan.user.repository.TravelPreferenceRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,7 +58,92 @@ public class TravelSpotService {
     private final TravelSpotRepository travelSpotRepository;
     private final DibsRepository dibsRepository;
     private final UserRepository userRepository;
+    private final TravelPreferenceRepository travelPreferenceRepository;
     private final ExternalApiClient externalApiClient;
+    private final AiApiClient aiApiClient;
+
+    public PopularTravelSpotResponse getTravelSpotSuggestions(String userId, TravelSpotSuggestionRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND));
+        Set<CompanionCondition> companionConditions = request.companionConditions() == null
+                ? Set.of()
+                : new HashSet<>(request.companionConditions());
+        List<String> contentIdSequence = request.travelSpotIdList() == null
+                ? List.of()
+                : request.travelSpotIdList().stream().map(String::valueOf).toList();
+
+        // 추천 요청의 장소 ID와 동행 조건을 AI 서버가 요구하는 자료형으로 변환한다.
+        AiTravelSpotRecommendRequest aiRequest = new AiTravelSpotRecommendRequest(
+                String.valueOf((LocalDate.now(ZoneId.of("Asia/Seoul")).getYear()
+                        - user.getBirthday().getYear() + 1) / 10 * 10),
+                request.regionCode(),
+                request.companionCount(),
+                contentIdSequence,
+                user.getGender().getDisplayName(),
+                companionConditions.contains(CompanionCondition.CHILD) ? 1 : 0,
+                companionConditions.contains(CompanionCondition.WHEELCHAIR) ? 1 : 0,
+                companionConditions.contains(CompanionCondition.ELDERLY) ? 1 : 0,
+                travelPreference.getPreferredRegionCodes().stream()
+                        .map(preferredRegionCode -> preferredRegionCode.getCode())
+                        .sorted()
+                        .toList(),
+                travelPreference.getResidenceRegionCode().getCode().substring(0, 2),
+                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to())),
+                request.theme(),
+                String.valueOf(travelPreference.getTravelStyleValue())
+        );
+
+        AiTravelSpotRecommendResponse aiResponse = aiApiClient.recommendTravelSpots(
+                aiRequest, AiTravelSpotRecommendResponse.class
+        );
+        if (aiResponse == null || aiResponse.recommendations() == null) {
+            throw new ExternalApiCallException("AI 여행지 추천 응답에 recommendations가 없습니다.");
+        }
+
+        // AI 추천 순서를 유지하면서 인기 여행지 응답과 같은 상세 정보를 채운다.
+        List<PopularTravelSpotResponse.ContentResponse> contents = aiResponse.recommendations().stream()
+                .map(recommendation -> {
+                    String contentId = recommendation.contentId();
+                    Map<String, Object> queryParams = new LinkedHashMap<>();
+                    queryParams.put("contentId", contentId);
+                    TourApiDetailCommonResponse response = externalApiClient.get(
+                            "/detailCommon2",
+                            queryParams,
+                            TourApiDetailCommonResponse.class
+                    );
+                    if (response == null
+                            || response.response() == null
+                            || response.response().body() == null
+                            || response.response().body().items() == null
+                            || response.response().body().items().item() == null
+                            || response.response().body().items().item().isEmpty()) {
+                        throw new TravelSpotException(
+                                TravelSpotErrorCode.TRAVEL_SPOT_NOT_FOUND,
+                                "여행지를 찾을 수 없습니다. contentId=" + contentId
+                        );
+                    }
+
+                    TourApiDetailCommonResponse.Item item = response.response().body().items().item().getFirst();
+                    String address = item.addr2() == null || item.addr2().isBlank()
+                            ? item.addr1()
+                            : item.addr1() + " " + item.addr2();
+                    boolean dibs = dibsRepository.existsByUserIdAndTravelSpotId(userId, contentId);
+                    return new PopularTravelSpotResponse.ContentResponse(
+                            contentId,
+                            address,
+                            TravelSpotCategory.getDisplayNameByContentTypeId(Integer.valueOf(item.contenttypeid())),
+                            item.firstimage() == null || item.firstimage().isBlank() ? null : item.firstimage(),
+                            item.title(),
+                            Integer.valueOf(item.lDongRegnCd() + item.lDongSignguCd()),
+                            dibs
+                    );
+                })
+                .toList();
+
+        return new PopularTravelSpotResponse(contents);
+    }
 
     public void createDibs(String userId, String contentId) {
 
@@ -107,6 +208,7 @@ public class TravelSpotService {
     public PageResponse<TravelSpotDibsItemResponse> getDibs(
             String userId,
             TravelRegionCode regionCode,
+            TravelSpotCategory category,
             int pageNumber,
             int pageSize
     ) {
@@ -116,9 +218,10 @@ public class TravelSpotService {
         // 기준 지역 코드의 뒤쪽 0을 제거한 prefix로 같은 지역 소속 여행지를 조회한다.
         String regionCodePrefix = regionCode.getCodePrefix();
         Page<Dibs> dibsPage = dibsRepository
-                .findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(
+                .findByUserIdAndTravelSpotRegionCodeStartingWithAndTravelSpotCategoryOrderByCreatedAtDescIdDesc(
                         userId,
                         regionCodePrefix,
+                        category.getContentTypeId(),
                         PageRequest.of(pageNumber - 1, pageSize)
                 );
         List<TravelSpotDibsItemResponse> contents = dibsPage.getContent().stream()

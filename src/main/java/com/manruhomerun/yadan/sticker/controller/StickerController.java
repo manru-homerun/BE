@@ -32,7 +32,7 @@ public class StickerController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행 스티커 조회 성공",
                     content = @Content(schema = @Schema(implementation = TravelStickerResponse.class))),
-            @ApiResponse(responseCode = "404", description = "여행을 찾을 수 없음",
+            @ApiResponse(responseCode = "404", description = "여행 또는 여행 참여 정보를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<TravelStickerResponse> getTravelStickers(
@@ -41,8 +41,7 @@ public class StickerController {
             String travelId,
             HttpServletRequest request
     ) {
-        //String userId = (String) request.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) request.getAttribute("userId");
         return ResponseEntity.ok(stickerService.getTravelStickers(travelId, userId));
     }
 

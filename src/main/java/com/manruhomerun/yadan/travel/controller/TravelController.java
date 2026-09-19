@@ -6,6 +6,7 @@ import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
 import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.service.TravelService;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
+import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Validated
 @RestController
 @RequiredArgsConstructor
@@ -33,17 +36,17 @@ public class TravelController {
     @PostMapping
     @Operation(summary = "여행 생성")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "여행 생성 성공"),
+            @ApiResponse(responseCode = "204", description = "여행 생성 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자, 경기 또는 여행 리소스를 찾을 수 없음",
+            @ApiResponse(responseCode = "404", description = "사용자, 친구 관계, 경기 또는 여행 테마를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<Void> createTravel(
-            @RequestBody TravelCreateRequest request
+            @RequestBody TravelCreateRequest request,
+            HttpServletRequest httpRequest
     ){
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
         travelService.createTravel(userId, request);
         return ResponseEntity.noContent().build();
     }
@@ -55,17 +58,17 @@ public class TravelController {
             @ApiResponse(responseCode = "204", description = "여행 수정 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "여행 또는 사용자를 찾을 수 없음",
+            @ApiResponse(responseCode = "404", description = "여행 또는 여행 참여 정보를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<?> modifyTravel(
+    public ResponseEntity<Void> modifyTravel(
             @Parameter(description = "수정할 여행 ID", example = "1e3a5081-675e-4264-8e56-ebb659e12acd")
             @PathVariable
             String travelId,
-            @RequestBody TravelModifyRequest request
+            @RequestBody TravelModifyRequest request,
+            HttpServletRequest httpRequest
     ){
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpRequest.getAttribute("userId");
 
         travelService.updateTravel(travelId, userId, request);
         return ResponseEntity.noContent().build();
@@ -93,8 +96,7 @@ public class TravelController {
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "pageSize는 1 이상이어야 합니다.")
             int pageSize
     ){
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
+        String userId = (String) httpServletRequest.getAttribute("userId");
         return ResponseEntity.ok(travelService.getTravelList(userId, status, pageNumber, pageSize));
     }
 
@@ -104,15 +106,17 @@ public class TravelController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행 조회 성공",
                     content = @Content(schema = @Schema(implementation = TravelDetailResponse.class))),
-            @ApiResponse(responseCode = "404", description = "여행을 찾을 수 없음",
+            @ApiResponse(responseCode = "404", description = "여행 또는 여행 참여 정보를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<TravelDetailResponse> getSpecificTravel(
             @Parameter(description = "조회할 여행 ID", example = "1e3a5081-675e-4264-8e56-ebb659e12acd")
             @PathVariable
-            String travelId
+            String travelId,
+            HttpServletRequest httpRequest
     ){
-        return ResponseEntity.ok(travelService.getTravelById(travelId));
+        String userId = (String) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(travelService.getTravelById(travelId, userId));
     }
 
     // 여행 테마 조회
@@ -121,7 +125,7 @@ public class TravelController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행 테마 목록 조회 성공", useReturnTypeSchema = true)
     })
-    public ResponseEntity<?> getTravelThemeList(
+    public ResponseEntity<List<ThemeListResponse>> getTravelThemeList(
     ){
         return ResponseEntity.ok(travelService.getTravelThemeList());
     }
@@ -141,9 +145,23 @@ public class TravelController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<Void> generateTravelCourse(@RequestBody TravelGenerateRequest request) {
-        travelService.generateTravelCourse(request);
-        return ResponseEntity.noContent().build();
+    @Operation(summary = "AI 여행 코스 생성")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "여행 코스 생성 성공",
+                    content = @Content(schema = @Schema(implementation = TravelAlignResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자, 친구 관계, 여행 취향, 경기 또는 여행지를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "AI 또는 외부 여행지 API 호출 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<TravelAlignResponse> generateTravelCourse(
+            @RequestBody TravelGenerateRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(travelService.generateTravelCourse(userId, request));
     }
 
     @GetMapping("/popular-spots")
@@ -152,16 +170,19 @@ public class TravelController {
             @ApiResponse(responseCode = "200", description = "인기 여행지 조회 성공",
                     content = @Content(schema = @Schema(implementation = PopularTravelSpotResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 지역 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<PopularTravelSpotResponse> getPopularSpots(
             @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
             @RequestParam TravelRegionCode region,
+            @Parameter(description = "조회할 여행지 카테고리", example = "TOURIST_ATTRACTION", required = true)
+            @RequestParam TravelSpotCategory category,
             HttpServletRequest httpRequest
     ){
-        //        String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111"; // 임시로 고정된 userId 사용
-        return ResponseEntity.ok(travelService.getPopularSpots(region, userId));
+        String userId = (String) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(travelService.getPopularSpots(region, category, userId));
     }
 
 }

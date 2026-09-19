@@ -8,7 +8,7 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true
     username: ${DB_USER}
     password: ${DB_PASS}
 
@@ -40,6 +40,7 @@ env:
   kakao:
     app-id: ${KAKAO_APP_ID}
     api-base-url: ${KAKAO_API_BASE_URL:https://kapi.kakao.com}
+    admin-key: ${KAKAO_ADMIN_KEY:}
   jwt:
     access-secret: ${JWT_ACCESS_SECRET}
     refresh-secret: ${JWT_REFRESH_SECRET}
@@ -52,5 +53,10 @@ env:
     service-key: ${TOUR_API_SERVICE_KEY}
   kbo:
     base-url: ${KBO_BASE_URL:https://eng.koreabaseball.com}
+  ai-api:
+    base-url: ${AI_API_BASE_URL}
+    travel-generate-path: /generate-course
+    travel-recommend-path: /recommend
   global:
-    webhook-url: ${DISCORD_WEBHOOK_URL}
+    webhook-url: ${DISCORD_WEBHOOK_URL:}
+    webhook-enabled: ${DISCORD_WEBHOOK_ENABLED:false}

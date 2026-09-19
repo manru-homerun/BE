@@ -52,4 +52,18 @@ public interface FriendRepository extends JpaRepository<Friend, Long> {
             String firstUserId,
             String secondUserId
     );
+
+    // 검색된 사용자들과의 친구 관계 일괄 조회
+    @Query("""
+            SELECT f
+            FROM Friend f
+            WHERE (f.firstUser.id = :currentUserId
+                    AND f.secondUser.id IN :targetUserIds)
+               OR (f.secondUser.id = :currentUserId
+                    AND f.firstUser.id IN :targetUserIds)
+            """)
+    List<Friend> findAllBetweenCurrentUserAndTargets(
+            @Param("currentUserId") String currentUserId,
+            @Param("targetUserIds") List<String> targetUserIds
+    );
 }

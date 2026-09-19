@@ -12,6 +12,7 @@ public enum TravelSpotCategory {
     SHOPPING(38, "쇼핑"),
     RESTAURANT(39, "음식점");
 
+    @Getter
     private final Integer contentTypeId;
     @Getter
     private final String displayName;

@@ -1,6 +1,7 @@
 package com.manruhomerun.yadan.auth.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,10 +21,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import static com.manruhomerun.yadan.global.config.SwaggerConfig.BEARER_AUTH;
 
 @RestController
 @RequiredArgsConstructor
@@ -104,6 +109,60 @@ public class AuthController {
             @Valid @RequestBody RefreshTokenRequest request
     ) {
         return ResponseEntity.ok(authService.refresh(request.refreshToken()));
+    }
+
+    @PostMapping("/logout")
+    @Operation(
+            summary = "로그아웃",
+            description = "서버 세션을 사용하지 않으므로 클라이언트가 보관 중인 Access Token과 Refresh Token을 삭제합니다."
+    )
+    @SecurityRequirement(name = BEARER_AUTH)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "로그아웃 성공"),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "유효하지 않은 Access Token",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "탈퇴한 회원",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/withdrawal")
+    @Operation(
+            summary = "회원 탈퇴",
+            description = "카카오 계정 연결을 해제한 뒤 서비스 회원을 소프트 삭제하고 개인정보를 초기화합니다."
+    )
+    @SecurityRequirement(name = BEARER_AUTH)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "회원 탈퇴 성공"),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "유효하지 않은 Access Token",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "이미 탈퇴한 회원",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "502",
+                    description = "카카오 계정 연결 해제 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    public ResponseEntity<Void> withdrawal(HttpServletRequest request) {
+        String userId = (String) request.getAttribute("userId");
+        authService.withdrawal(userId);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -80,6 +80,9 @@ public class User {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -143,5 +146,20 @@ public class User {
         this.favoriteTeam = favoriteTeam;
         this.birthday = birthday;
         this.gender = gender;
+    }
+
+    public void withdraw() {
+        if (Boolean.TRUE.equals(this.isDeleted)) {
+            return;
+        }
+
+        this.providerUserId = "withdrawn:" + this.id;
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        this.nickname = null;
+        this.profileImageUrl = null;
+        this.gender = null;
+        this.birthday = null;
+        this.favoriteTeam = null;
     }
 }

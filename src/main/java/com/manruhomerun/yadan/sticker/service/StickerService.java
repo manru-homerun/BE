@@ -5,6 +5,7 @@ import com.manruhomerun.yadan.sticker.domain.entity.StickerPack;
 import com.manruhomerun.yadan.sticker.dto.TravelStickerResponse;
 import com.manruhomerun.yadan.sticker.repository.StickerRepository;
 import com.manruhomerun.yadan.travel.domain.entity.TravelSticker;
+import com.manruhomerun.yadan.travel.domain.entity.TravelUser;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
@@ -30,10 +31,11 @@ public class StickerService {
     public TravelStickerResponse getTravelStickers(String travelId, String userId) {
         travelRepository.findById(travelId).orElseThrow(
                 () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
-        travelUserRepository.findByTravelIdAndUserId(travelId, userId)
+        TravelUser travelUser = travelUserRepository.findByTravelIdAndUserId(travelId, userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        Optional<TravelSticker> travelStickerOptional = travelStickerRepository.findFirstByTravelIdOrderByIdAsc(travelId);
+        Optional<TravelSticker> travelStickerOptional = travelStickerRepository
+                .findFirstByTravelUserIdOrderByIdAsc(travelUser.getId());
         if (travelStickerOptional.isEmpty()) {
             return TravelStickerResponse.empty();
         }
@@ -41,7 +43,7 @@ public class StickerService {
         StickerPack stickerPack = travelStickerOptional.get().getStickerPack();
         List<Sticker> stickers = stickerRepository.findAllByStickerPackIdOrderByIdAsc(stickerPack.getId());
 
-        // 여행에 연결된 스티커팩 기준으로 전체 스티커 목록을 내려준다.
+        // 현재 여행 참여자가 획득한 스티커팩 기준으로 전체 스티커 목록을 내려준다.
         return TravelStickerResponse.of(stickerPack, stickers);
     }
 }
