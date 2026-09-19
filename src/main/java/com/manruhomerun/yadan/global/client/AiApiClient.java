@@ -37,8 +37,9 @@ public class AiApiClient {
 
         logger.info("AI API 요청 시작 uri={}, body={}", requestUri, requestBody);
 
+        String responseBody = null;
         try {
-            String responseBody = RestClient.create()
+            responseBody = RestClient.create()
                     .post()
                     .uri(requestUri)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -57,7 +58,8 @@ public class AiApiClient {
                         throw new ExternalApiCallException(
                                 "AI API 호출에 실패했습니다. "
                                         + "path=" + path + "\n"
-                                        + "status=" + apiResponse.getStatusCode()
+                                        + "status=" + apiResponse.getStatusCode(),
+                                errorResponseBody
                         );
                     })
                     .body(String.class);
@@ -71,7 +73,7 @@ public class AiApiClient {
             return objectMapper.readValue(responseBody, responseType);
         } catch (JsonProcessingException exception) {
             logger.error("AI API 응답 파싱 실패 path={}", path, exception);
-            throw new ExternalApiCallException("AI API 응답 파싱에 실패했습니다. path=" + path);
+            throw new ExternalApiCallException("AI API 응답 파싱에 실패했습니다. path=" + path, responseBody);
         } catch (RestClientException exception) {
             logger.error("AI API 통신 실패 uri={}", requestUri, exception);
             throw new ExternalApiCallException("AI API 호출에 실패했습니다. path=" + path);
@@ -88,8 +90,9 @@ public class AiApiClient {
 
         logger.info("AI API 요청 시작 uri={}, body={}", requestUri, requestBody);
 
+        String responseBody = null;
         try {
-            String responseBody = RestClient.create()
+            responseBody = RestClient.create()
                     .post()
                     .uri(requestUri)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -103,7 +106,8 @@ public class AiApiClient {
                         logger.error("AI API 오류 응답 status={}, body={}", apiResponse.getStatusCode(), errorResponseBody);
                         throw new ExternalApiCallException(
                                 "AI API 호출에 실패했습니다. path=" + path
-                                        + "\nstatus=" + apiResponse.getStatusCode()
+                                        + "\nstatus=" + apiResponse.getStatusCode(),
+                                errorResponseBody
                         );
                     })
                     .body(String.class);
@@ -116,7 +120,7 @@ public class AiApiClient {
             return objectMapper.readValue(responseBody, responseType);
         } catch (JsonProcessingException exception) {
             logger.error("AI API 응답 파싱 실패 path={}", path, exception);
-            throw new ExternalApiCallException("AI API 응답 파싱에 실패했습니다. path=" + path);
+            throw new ExternalApiCallException("AI API 응답 파싱에 실패했습니다. path=" + path, responseBody);
         } catch (RestClientException exception) {
             logger.error("AI API 통신 실패 uri={}", requestUri, exception);
             throw new ExternalApiCallException("AI API 호출에 실패했습니다. path=" + path);

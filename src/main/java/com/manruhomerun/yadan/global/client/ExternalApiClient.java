@@ -1,6 +1,7 @@
 package com.manruhomerun.yadan.global.client;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.springframework.http.HttpStatusCode;
@@ -44,16 +45,19 @@ public class ExternalApiClient {
 
         URI requestUri = uriBuilder.encode().build().toUri();
 
+        String responseBody = null;
         try {
-            String responseBody = RestClient.create()
+            responseBody = RestClient.create()
                     .get()
                     .uri(requestUri)
                     .retrieve()
                     .onStatus(HttpStatusCode::isError, (request, response) -> {
+                        String errorResponseBody = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
                         throw new ExternalApiCallException(
                                 "외부 API 호출에 실패했습니다. " +
                                 "path=" + path + "\n" +
-                                "status=" + response.getStatusCode()
+                                "status=" + response.getStatusCode(),
+                                errorResponseBody
                         );
                     })
                     .body(String.class);
@@ -62,25 +66,29 @@ public class ExternalApiClient {
 
             if (response == null) {
                 throw new ExternalApiCallException(
-                        "외부 API 응답이 비어 있습니다. path=" + path
+                        "외부 API 응답이 비어 있습니다. path=" + path,
+                        responseBody
                 );
             }
             if (response.getResultCode() == null) {
                 throw new ExternalApiCallException(
-                        "외부 API 응답 헤더가 올바르지 않습니다. path=" + path
+                        "외부 API 응답 헤더가 올바르지 않습니다. path=" + path,
+                        responseBody
                 );
             }
             if (!"0000".equals(response.getResultCode())) {
                 throw new ExternalApiCallException(
                         "외부 API 호출에 실패했습니다. path=" + path
-                        + "\nerrorMessage=" + response.getResultMessage()
+                        + "\nerrorMessage=" + response.getResultMessage(),
+                        responseBody
                 );
             }
 
             return response;
         } catch (JsonProcessingException exception) {
             throw new ExternalApiCallException(
-                    "외부 API 응답 파싱에 실패했습니다. path=" + path
+                    "외부 API 응답 파싱에 실패했습니다. path=" + path,
+                    responseBody
             );
         } catch (RestClientException exception) {
             throw new ExternalApiCallException(

@@ -90,7 +90,7 @@ public class TravelSpotService {
                         .sorted()
                         .toList(),
                 travelPreference.getResidenceRegionCode().getCode().substring(0, 2),
-                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to())),
+                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to()) + 1),
                 request.theme(),
                 String.valueOf(travelPreference.getTravelStyleValue())
         );
@@ -217,13 +217,12 @@ public class TravelSpotService {
 
         // 기준 지역 코드의 뒤쪽 0을 제거한 prefix로 같은 지역 소속 여행지를 조회한다.
         String regionCodePrefix = regionCode.getCodePrefix();
-        Page<Dibs> dibsPage = dibsRepository
-                .findByUserIdAndTravelSpotRegionCodeStartingWithAndTravelSpotCategoryOrderByCreatedAtDescIdDesc(
-                        userId,
-                        regionCodePrefix,
-                        category.getContentTypeId(),
-                        PageRequest.of(pageNumber - 1, pageSize)
-                );
+        PageRequest pageRequest = PageRequest.of(pageNumber - 1, pageSize);
+        Page<Dibs> dibsPage = category == null
+                ? dibsRepository.findByUserIdAndTravelSpotRegionCodeStartingWithOrderByCreatedAtDescIdDesc(
+                        userId, regionCodePrefix, pageRequest)
+                : dibsRepository.findByUserIdAndTravelSpotRegionCodeStartingWithAndTravelSpotCategoryOrderByCreatedAtDescIdDesc(
+                        userId, regionCodePrefix, category.getContentTypeId(), pageRequest);
         List<TravelSpotDibsItemResponse> contents = dibsPage.getContent().stream()
                 .map(Dibs::getTravelSpot)
                 .map(TravelSpotDibsItemResponse::from)
@@ -310,9 +309,9 @@ public class TravelSpotService {
         queryParams.put("lDongRegnCd", regionCode.substring(0, 2));
 
         String signguCode = regionCode.substring(2);
-        if (!"000".equals(signguCode)) {
-            queryParams.put("lDongSignguCd", signguCode);
-        }
+        // if (!"000".equals(signguCode)) {
+        //     queryParams.put("lDongSignguCd", signguCode);
+        // }
 
         TourApiSearchKeywordResponse response = externalApiClient.get(
                 "/searchKeyword2",
@@ -338,7 +337,8 @@ public class TravelSpotService {
                 .map(TravelSpotSearchItemResponse::from)
                 .toList();
 
-        int resolvedPageSize = response.response().body().numOfRows() == null ? pageSize : response.response().body().numOfRows();
+        Integer responsePageSize = response.response().body().numOfRows();
+        int resolvedPageSize = responsePageSize != null && responsePageSize > 0 ? responsePageSize : pageSize;
         long totalElements = response.response().body().totalCount() == null ? 0 : response.response().body().totalCount();
 
         return PageResponse.from(
