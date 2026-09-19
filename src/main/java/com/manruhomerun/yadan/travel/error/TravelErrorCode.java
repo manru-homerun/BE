@@ -3,7 +3,8 @@ package com.manruhomerun.yadan.travel.error;
 import com.manruhomerun.yadan.global.error.BaseErrorCode;
 
 public enum TravelErrorCode implements BaseErrorCode {
-    TRAVEL_NOT_FOUND("TRAVEL_404", "여행을 찾을 수 없습니다.", 404);
+    TRAVEL_NOT_FOUND("TRAVEL_404", "여행을 찾을 수 없습니다.", 404),
+    THEME_NOT_FOUND("THEME_404", "여행 테마를 찾을 수 없습니다.", 404);
 
     private final String code;
     private final String defaultMessage;

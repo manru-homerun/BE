@@ -40,9 +40,10 @@ public class BaseballCrawlingTestController {
     @Operation(summary = "지정한 날짜의 경기 결과를 수동 업데이트")
     public ResponseEntity<Void> crawlResults(
             @Parameter(description = "결과 업데이트 대상 날짜", example = "2026-07-16")
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate
+            @RequestParam(name = "startDate", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(name = "endDate", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
-        baseballGameCrawlingService.updateGameResults(targetDate);
+        baseballGameCrawlingService.updateGameResults(startDate, endDate);
         return ResponseEntity.noContent().build();
     }
 }

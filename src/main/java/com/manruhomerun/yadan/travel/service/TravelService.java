@@ -5,13 +5,19 @@ import com.manruhomerun.yadan.baseball.domain.entity.BaseballStadium;
 import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
 import com.manruhomerun.yadan.baseball.error.exception.BaseballGameNotFoundException;
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
+import com.manruhomerun.yadan.friend.error.FriendErrorCode;
+import com.manruhomerun.yadan.friend.error.exception.FriendException;
+import com.manruhomerun.yadan.friend.repository.FriendRepository;
 import com.manruhomerun.yadan.global.client.ExternalApiClient;
+import com.manruhomerun.yadan.global.client.AiApiClient;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
 import com.manruhomerun.yadan.travel.domain.entity.*;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
+import com.manruhomerun.yadan.travel.domain.enums.CompanionCondition;
 import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
+import com.manruhomerun.yadan.travel.error.exception.ThemeNotFoundException;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
 import com.manruhomerun.yadan.travel.repository.*;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
@@ -24,7 +30,11 @@ import com.manruhomerun.yadan.travelspot.repository.TravelSpotRepository;
 import com.manruhomerun.yadan.travelcerti.domain.entity.TravelCertification;
 import com.manruhomerun.yadan.travelcerti.repository.TravelCertificationRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
+import com.manruhomerun.yadan.user.domain.entity.TravelPreference;
+import com.manruhomerun.yadan.user.error.UserErrorCode;
+import com.manruhomerun.yadan.user.error.exception.UserException;
 import com.manruhomerun.yadan.user.repository.UserRepository;
+import com.manruhomerun.yadan.user.repository.TravelPreferenceRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageImpl;
@@ -50,12 +60,14 @@ public class TravelService {
     private final TravelCertificationRepository travelCertificationRepository;
     private final TravelTravelSpotRepository travelTravelSpotRepository;
     private final TravelUserRepository travelUserRepository;
-    private final TravelThemeRepository travelThemeRepository;
     private final ThemeRepository themeRepository;
     private final UserRepository userRepository;
+    private final FriendRepository friendRepository;
+    private final TravelPreferenceRepository travelPreferenceRepository;
     private final TravelSpotRepository travelSpotRepository;
     private final DibsRepository dibsRepository;
     private final ExternalApiClient externalApiClient;
+    private final AiApiClient aiApiClient;
 
     //private final TravelSpotService travelSpotService;
 
@@ -107,6 +119,19 @@ public class TravelService {
             throw new UserNotFoundException();
         }
 
+        // 요청한 모든 동행자가 방장과 실제 친구 관계인지 확인한다.
+        if (!friendIds.isEmpty() && friendRepository.findAllBetweenCurrentUserAndTargets(
+                userId, new ArrayList<>(friendIds)).size() != friendIds.size()) {
+            throw new FriendException(FriendErrorCode.FRIEND_NOT_FOUND);
+        }
+
+        Theme theme = themeRepository.findById(request.theme()).orElseThrow(
+                () -> new ThemeNotFoundException(
+                        TravelErrorCode.THEME_NOT_FOUND,
+                        "여행 테마를 찾을 수 없습니다. themeId=" + request.theme()
+                )
+        );
+
         Travel travel = Travel.builder()
                 .startDate(request.from())
                 .endDate(request.to())
@@ -114,6 +139,7 @@ public class TravelService {
                 .gameIdx(request.baseballGame().baseballGameAfterIdx())
                 .baseballGame(baseballGame)
                 .regionCode(request.regionCode())
+                .theme(theme)
                 .build();
         travelRepository.save(travel);
 
@@ -132,15 +158,6 @@ public class TravelService {
                 .user(leader)
                 .isLeader(true)
                 .build());
-
-        // 여행 테마와의 연관관계 저장
-        themeRepository.findAllById(request.theme())
-                .stream().map(
-                theme -> TravelTheme.builder()
-                        .travel(travel)
-                        .theme(theme)
-                        .build()
-        ).forEach(travelThemeRepository::save);
 
         // 관광지와의 연관관계 저장
         for(TravelCreateRequest.ScheduleRequest schedule : request.schedule()) {
@@ -271,9 +288,7 @@ public class TravelService {
     }
 
     public List<ThemeListResponse> getTravelThemeList() {
-        List<Theme> themes = themeRepository.findAll();
-        Collections.sort(themes, Comparator.comparingInt(Theme::getOrder));
-        return themes.stream()
+        return themeRepository.findAll(Sort.by(Sort.Direction.ASC, "id")).stream()
                 .map(ThemeListResponse::from)
                 .toList();
     }
@@ -488,8 +503,102 @@ public class TravelService {
         return 6_371_000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
     }
 
-    public void generateTravelCourse(TravelGenerateRequest request){
-        // AI 논의 후 작성 예정
+    public TravelAlignResponse generateTravelCourse(String userId, TravelGenerateRequest request){
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        Set<String> friendIds = request.friends() == null ? Set.of() : new HashSet<>(request.friends());
+        // 코스를 생성하기 전에 요청한 동행자 모두와의 친구 관계를 확인한다.
+        if (!friendIds.isEmpty() && friendRepository.findAllBetweenCurrentUserAndTargets(
+                userId, new ArrayList<>(friendIds)).size() != friendIds.size()) {
+            throw new FriendException(FriendErrorCode.FRIEND_NOT_FOUND);
+        }
+        TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND));
+
+        LocalDate currentDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
+        int koreanAge = currentDate.getYear() - user.getBirthday().getYear() + 1;
+        String travelStyleValue = String.valueOf(travelPreference.getTravelStyleValue());
+        String travelPersona = String.valueOf(request.theme());
+        Set<CompanionCondition> companionConditions = request.companionConditions() == null
+                ? Set.of()
+                : new HashSet<>(request.companionConditions());
+
+        // AI 서버 명세에 맞춰 사용자 취향과 여행 생성 입력을 하나의 요청으로 조합한다.
+        AiTravelGenerateRequest aiRequest = new AiTravelGenerateRequest(
+                request.regionCode(),
+                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to()) + 1),
+                travelPersona,
+                String.valueOf(koreanAge / 10 * 10),
+                user.getGender().getDisplayName(),
+                travelStyleValue,
+                travelPreference.getPreferredRegionCodes().stream()
+                        .map(preferredRegionCode -> preferredRegionCode.getCode())
+                        .sorted()
+                        .toList(),
+                travelPreference.getResidenceRegionCode().getCode(),
+                companionConditions.contains(CompanionCondition.CHILD),
+                companionConditions.contains(CompanionCondition.ELDERLY),
+                companionConditions.contains(CompanionCondition.WHEELCHAIR),
+                request.companionCount()
+        );
+
+        AiTravelGenerateResponse aiResponse = aiApiClient.generateTravel(aiRequest, AiTravelGenerateResponse.class);
+
+        // AI의 일차·방문 순서를 정렬 API 입력 형식으로 옮긴다.
+        long travelDuration = ChronoUnit.DAYS.between(request.from(), request.to()) + 1;
+        List<TravelAlignRequest.ScheduleRequest> schedules = new ArrayList<>();
+        for (int day = 1; day <= travelDuration; day++) {
+            int currentDay = day;
+            List<String> travelSpotIds = aiResponse.steps().stream()
+                    .filter(step -> step.dayIndex() == currentDay)
+                    .sorted(Comparator.comparingInt(AiTravelGenerateResponse.StepResponse::slotIndex))
+                    .map(AiTravelGenerateResponse.StepResponse::contentId)
+                    .toList();
+            schedules.add(new TravelAlignRequest.ScheduleRequest(day, travelSpotIds));
+        }
+
+        return getAlignedTravelList(new TravelAlignRequest(
+                request.from(),
+                request.to(),
+                new TravelAlignRequest.BaseballGameRequest(request.baseballGameId()),
+                schedules
+        ));
+    }
+
+    public void getTravelSpotSuggestions(String userId, TravelSpotSuggestionRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND));
+        Set<CompanionCondition> companionConditions = request.companionConditions() == null
+                ? Set.of()
+                : new HashSet<>(request.companionConditions());
+        List<String> contentIdSequence = request.travelSpotIdList() == null
+                ? List.of()
+                : request.travelSpotIdList().stream().map(String::valueOf).toList();
+
+        // 추천 요청의 장소 ID와 동행 조건을 AI 서버가 요구하는 자료형으로 변환한다.
+        AiTravelSpotRecommendRequest aiRequest = new AiTravelSpotRecommendRequest(
+                String.valueOf((LocalDate.now(ZoneId.of("Asia/Seoul")).getYear()
+                        - user.getBirthday().getYear() + 1) / 10 * 10),
+                request.regionCode(),
+                request.companionCount(),
+                contentIdSequence,
+                user.getGender().getDisplayName(),
+                companionConditions.contains(CompanionCondition.CHILD) ? 1 : 0,
+                companionConditions.contains(CompanionCondition.WHEELCHAIR) ? 1 : 0,
+                companionConditions.contains(CompanionCondition.ELDERLY) ? 1 : 0,
+                travelPreference.getPreferredRegionCodes().stream()
+                        .map(preferredRegionCode -> preferredRegionCode.getCode())
+                        .sorted()
+                        .toList(),
+                travelPreference.getResidenceRegionCode().getCode().substring(0, 2),
+                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to())),
+                request.theme(),
+                String.valueOf(travelPreference.getTravelStyleValue())
+        );
+
+        aiApiClient.recommendTravelSpots(aiRequest);
     }
 
     public PopularTravelSpotResponse getPopularSpots(

@@ -25,8 +25,8 @@ public record TravelCreateRequest(
         @Schema(description = "함께 가는 친구 ID 목록")
         List<String> friends,
 
-        @Schema(description = "여행 테마 ID 목록")
-        List<Long> theme,
+        @Schema(description = "여행 테마 ID", example = "2")
+        Long theme,
 
         @Schema(description = "일차별 여행지 일정")
         List<ScheduleRequest> schedule

@@ -1,9 +1,7 @@
 package com.manruhomerun.yadan.travel.dto;
 
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
-import com.manruhomerun.yadan.travel.domain.entity.Theme;
 import com.manruhomerun.yadan.travel.domain.entity.Travel;
-import com.manruhomerun.yadan.travel.domain.entity.TravelTheme;
 import com.manruhomerun.yadan.travel.domain.entity.TravelTravelSpot;
 import com.manruhomerun.yadan.travel.domain.entity.TravelUser;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
@@ -43,8 +41,8 @@ public record TravelDetailResponse(
         @Schema(description = "현재 사용자가 인증한 여행지 수", example = "3")
         long vertifiedSpotsCnt,
 
-        @Schema(description = "여행 테마 목록")
-        List<String> theme,
+        @Schema(description = "여행 테마", example = "맛집 탐방")
+        String theme,
 
         @Schema(description = "일차별 여행 일정")
         List<ScheduleResponse> schedule
@@ -57,7 +55,6 @@ public record TravelDetailResponse(
             long vertifiedSpotsCnt
     ) {
         List<TravelUser> safeTravelUsers = travel.getTravelUserList() == null ? List.of() : travel.getTravelUserList();
-        List<TravelTheme> safeTravelThemes = travel.getTravelThemeList() == null ? List.of() : travel.getTravelThemeList();
         List<TravelTravelSpot> safeTravelTravelSpots = travel.getTravelTravelSpotList() == null ? List.of() : travel.getTravelTravelSpotList();
 
         List<String> friends = safeTravelUsers.stream()
@@ -69,11 +66,7 @@ public record TravelDetailResponse(
         boolean isLeader = safeTravelUsers.stream()
                 .anyMatch(travelUser -> userId.equals(travelUser.getUser().getId()) && travelUser.isLeader());
 
-        List<String> theme = safeTravelThemes.stream()
-                .map(TravelTheme::getTheme)
-                .filter(Objects::nonNull)
-                .map(Theme::getName)
-                .toList();
+        String theme = travel.getTheme() == null ? null : travel.getTheme().getName();
 
         // day와 order 기준으로 정렬한 뒤 일차별 여행지 목록으로 묶는다.
         List<ScheduleResponse> schedule = safeTravelTravelSpots.stream()

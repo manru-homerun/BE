@@ -13,6 +13,7 @@ import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballStadium;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballTeam;
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
+import com.manruhomerun.yadan.baseball.error.exception.BaseballInvalidDateRangeException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,48 +93,57 @@ public class BaseballGameCrawlingService {
         // 취소 경기 편성 시 월요일에도 경기를 진행할 수 있기 때문에 크롤링을 진행합니다.
         LocalDate previousDate = LocalDate.now(KOREA_ZONE_ID).minusDays(1);
         log.info("전날({}) 경기 결과 정기 동기화 작업을 진행합니다.", previousDate);
-        updateGameResults(previousDate);
+        updateGameResults(previousDate, previousDate);
     }
 
-    public void updateGameResults(LocalDate targetDate) {
-        List<KboScheduleCrawlerClient.CrawledGame> crawledGames = kboScheduleCrawlerClient.crawlMonthlyGames(YearMonth.from(targetDate))
-                .stream()
-                .filter(crawledGame -> crawledGame.gameDateTime().toLocalDate().isEqual(targetDate))
-                .toList();
+    public void updateGameResults(LocalDate startDate, LocalDate endDate) {
+        if (startDate.isAfter(endDate)) throw new BaseballInvalidDateRangeException();
 
         int updatedCount = 0;
-        for (KboScheduleCrawlerClient.CrawledGame crawledGame : crawledGames) {
-            BaseballTeam awayTeam = entityManager.getReference(BaseballTeam.class, crawledGame.awayTeamCode().getTeamId());
-            BaseballTeam homeTeam = entityManager.getReference(BaseballTeam.class, crawledGame.homeTeamCode().getTeamId());
-            if (crawledGame.stadiumCode() == null) {
-                log.error(
-                        "구장 코드 매핑에 실패해 경기 결과 동기화를 중단합니다. awayTeamCode={}, homeTeamCode={}, gameDateTime={}",
-                        crawledGame.awayTeamCode(),
-                        crawledGame.homeTeamCode(),
-                        crawledGame.gameDateTime()
-                );
-                throw new IllegalStateException("구장 코드 매핑에 실패했습니다.");
+        YearMonth startMonth = YearMonth.from(startDate);
+        YearMonth endMonth = YearMonth.from(endDate);
+
+        // 월별로 한 번씩 조회하고 시작일과 종료일을 포함한 범위의 결과만 반영합니다.
+        for (YearMonth targetMonth = startMonth; !targetMonth.isAfter(endMonth); targetMonth = targetMonth.plusMonths(1)) {
+            List<KboScheduleCrawlerClient.CrawledGame> crawledGames = kboScheduleCrawlerClient.crawlMonthlyGames(targetMonth)
+                    .stream()
+                    .filter(crawledGame -> !crawledGame.gameDateTime().toLocalDate().isBefore(startDate))
+                    .filter(crawledGame -> !crawledGame.gameDateTime().toLocalDate().isAfter(endDate))
+                    .toList();
+
+            for (KboScheduleCrawlerClient.CrawledGame crawledGame : crawledGames) {
+                BaseballTeam awayTeam = entityManager.getReference(BaseballTeam.class, crawledGame.awayTeamCode().getTeamId());
+                BaseballTeam homeTeam = entityManager.getReference(BaseballTeam.class, crawledGame.homeTeamCode().getTeamId());
+                if (crawledGame.stadiumCode() == null) {
+                    log.error(
+                            "구장 코드 매핑에 실패해 경기 결과 동기화를 중단합니다. awayTeamCode={}, homeTeamCode={}, gameDateTime={}",
+                            crawledGame.awayTeamCode(),
+                            crawledGame.homeTeamCode(),
+                            crawledGame.gameDateTime()
+                    );
+                    throw new IllegalStateException("구장 코드 매핑에 실패했습니다.");
+                }
+                BaseballStadium stadium = entityManager.getReference(BaseballStadium.class, crawledGame.stadiumCode().getStadiumId());
+
+                BaseballGame baseballGame = findExistingGame(crawledGame, homeTeam, awayTeam)
+                        .orElseThrow(() -> {
+                            log.error(
+                                    "경기 결과를 업데이트할 기존 경기를 찾을 수 없습니다. homeTeam={}, awayTeam={}, gameDateTime={}",
+                                    homeTeam.getTeamName(),
+                                    awayTeam.getTeamName(),
+                                    crawledGame.gameDateTime()
+                            );
+                            return new IllegalStateException("경기 결과를 업데이트할 기존 경기를 찾을 수 없습니다.");
+                        });
+
+                baseballGame.updateSchedule(stadium, homeTeam, awayTeam, crawledGame.gameDateTime(), crawledGame.gameType());
+                baseballGame.updateResult(crawledGame.awayTeamScore(), crawledGame.homeTeamScore(), crawledGame.canceled());
+                baseballGameRepository.save(baseballGame);
+                updatedCount++;
             }
-            BaseballStadium stadium = entityManager.getReference(BaseballStadium.class, crawledGame.stadiumCode().getStadiumId());
-
-            BaseballGame baseballGame = findExistingGame(crawledGame, homeTeam, awayTeam)
-                    .orElseThrow(() -> {
-                        log.error(
-                                "전날 경기 결과를 업데이트할 기존 경기를 찾을 수 없습니다. homeTeam={}, awayTeam={}, gameDateTime={}",
-                                homeTeam.getTeamName(),
-                                awayTeam.getTeamName(),
-                                crawledGame.gameDateTime()
-                        );
-                        return new IllegalStateException("전날 경기 결과를 업데이트할 기존 경기를 찾을 수 없습니다.");
-                    });
-
-            baseballGame.updateSchedule(stadium, homeTeam, awayTeam, crawledGame.gameDateTime(), crawledGame.gameType());
-            baseballGame.updateResult(crawledGame.awayTeamScore(), crawledGame.homeTeamScore(), crawledGame.canceled());
-            baseballGameRepository.save(baseballGame);
-            updatedCount++;
         }
 
-        log.info("경기 결과 동기화를 완료했습니다. targetDate={}, updatedCount={}", targetDate, updatedCount);
+        log.info("경기 결과 동기화를 완료했습니다. startDate={}, endDate={}, updatedCount={}", startDate, endDate, updatedCount);
     }
 
     private Optional<BaseballGame> findExistingGame(

@@ -143,8 +143,22 @@ public class TravelController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<Void> generateTravelCourse(@RequestBody TravelGenerateRequest request) {
-        travelService.generateTravelCourse(request);
+    public ResponseEntity<TravelAlignResponse> generateTravelCourse(
+            @RequestBody TravelGenerateRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(travelService.generateTravelCourse(userId, request));
+    }
+
+    @PostMapping("/spots/suggestions")
+    @Operation(summary = "여행지 추천 요청")
+    public ResponseEntity<Void> getTravelSpotSuggestions(
+            @RequestBody TravelSpotSuggestionRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+        travelService.getTravelSpotSuggestions(userId, request);
         return ResponseEntity.noContent().build();
     }
 
