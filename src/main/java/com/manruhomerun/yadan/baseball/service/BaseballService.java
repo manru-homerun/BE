@@ -1,6 +1,7 @@
 package com.manruhomerun.yadan.baseball.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -85,7 +86,7 @@ public class BaseballService {
 
         Page<BaseballGame> page = baseballGameRepository.findUpcomingGamesByTeamId(
                 teamId,
-                (baselineDate == null ? LocalDate.now() : baselineDate).atStartOfDay(),
+                (baselineDate == null ? LocalDate.now(ZoneId.of("Asia/Seoul")) : baselineDate).atStartOfDay(),
                 pageRequest
         );
 
