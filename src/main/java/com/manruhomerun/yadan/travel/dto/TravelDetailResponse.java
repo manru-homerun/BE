@@ -41,8 +41,8 @@ public record TravelDetailResponse(
         @Schema(description = "현재 사용자가 인증한 여행지 수", example = "3")
         long vertifiedSpotsCnt,
 
-        @Schema(description = "여행 테마", example = "맛집 탐방")
-        String theme,
+        @Schema(description = "여행 테마 ID", example = "1")
+        long themeId,
 
         @Schema(description = "일차별 여행 일정")
         List<ScheduleResponse> schedule
@@ -60,13 +60,12 @@ public record TravelDetailResponse(
         List<String> friends = safeTravelUsers.stream()
                 .map(TravelUser::getUser)
                 .filter(Objects::nonNull)
+                .filter(user -> !userId.equals(user.getId()))
                 .map(user -> user.getNickname() == null ? user.getId() : user.getNickname())
                 .toList();
 
         boolean isLeader = safeTravelUsers.stream()
                 .anyMatch(travelUser -> userId.equals(travelUser.getUser().getId()) && travelUser.isLeader());
-
-        String theme = travel.getTheme() == null ? null : travel.getTheme().getName();
 
         // day와 order 기준으로 정렬한 뒤 일차별 여행지 목록으로 묶는다.
         List<ScheduleResponse> schedule = safeTravelTravelSpots.stream()
@@ -99,7 +98,7 @@ public record TravelDetailResponse(
                 friends,
                 isLeader,
                 vertifiedSpotsCnt,
-                theme,
+                travel.getTheme().getId(),
                 schedule
         );
     }
