@@ -6,6 +6,9 @@ import com.manruhomerun.yadan.baseball.domain.entity.BaseballStadium;
 import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
 import com.manruhomerun.yadan.baseball.error.exception.BaseballGameNotFoundException;
 import com.manruhomerun.yadan.baseball.repository.BaseballGameRepository;
+import com.manruhomerun.yadan.friend.error.FriendErrorCode;
+import com.manruhomerun.yadan.friend.error.exception.FriendException;
+import com.manruhomerun.yadan.friend.repository.FriendRepository;
 import com.manruhomerun.yadan.global.client.ExternalApiClient;
 import com.manruhomerun.yadan.global.client.AiApiClient;
 import com.manruhomerun.yadan.global.dto.PageResponse;
@@ -60,6 +63,7 @@ public class TravelService {
     private final TravelUserRepository travelUserRepository;
     private final ThemeRepository themeRepository;
     private final UserRepository userRepository;
+    private final FriendRepository friendRepository;
     private final TravelPreferenceRepository travelPreferenceRepository;
     private final TravelSpotRepository travelSpotRepository;
     private final DibsRepository dibsRepository;
@@ -114,6 +118,12 @@ public class TravelService {
 
         if (friends.size() != friendIds.size()) {
             throw new UserNotFoundException();
+        }
+
+        // 요청한 모든 동행자가 방장과 실제 친구 관계인지 확인한다.
+        if (!friendIds.isEmpty() && friendRepository.findAllBetweenCurrentUserAndTargets(
+                userId, new ArrayList<>(friendIds)).size() != friendIds.size()) {
+            throw new FriendException(FriendErrorCode.FRIEND_NOT_FOUND);
         }
 
         Theme theme = themeRepository.findById(request.theme()).orElseThrow(
@@ -497,6 +507,12 @@ public class TravelService {
     public JsonNode generateTravelCourse(String userId, TravelGenerateRequest request){
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+        Set<String> friendIds = request.friends() == null ? Set.of() : new HashSet<>(request.friends());
+        // 코스를 생성하기 전에 요청한 동행자 모두와의 친구 관계를 확인한다.
+        if (!friendIds.isEmpty() && friendRepository.findAllBetweenCurrentUserAndTargets(
+                userId, new ArrayList<>(friendIds)).size() != friendIds.size()) {
+            throw new FriendException(FriendErrorCode.FRIEND_NOT_FOUND);
+        }
         TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
                 .orElseThrow(() -> new UserException(UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND));
 
