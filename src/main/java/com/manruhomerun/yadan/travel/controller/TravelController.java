@@ -1,6 +1,5 @@
 package com.manruhomerun.yadan.travel.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.global.dto.PageResponse;
 import com.manruhomerun.yadan.travel.domain.enums.TravelStatus;
@@ -144,7 +143,7 @@ public class TravelController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<JsonNode> generateTravelCourse(
+    public ResponseEntity<TravelAlignResponse> generateTravelCourse(
             @RequestBody TravelGenerateRequest request,
             HttpServletRequest httpRequest
     ) {

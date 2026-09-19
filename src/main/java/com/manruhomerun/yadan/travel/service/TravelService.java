@@ -1,6 +1,5 @@
 package com.manruhomerun.yadan.travel.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballGame;
 import com.manruhomerun.yadan.baseball.domain.entity.BaseballStadium;
 import com.manruhomerun.yadan.baseball.error.BaseballErrorCode;
@@ -504,7 +503,7 @@ public class TravelService {
         return 6_371_000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
     }
 
-    public JsonNode generateTravelCourse(String userId, TravelGenerateRequest request){
+    public TravelAlignResponse generateTravelCourse(String userId, TravelGenerateRequest request){
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
         Set<String> friendIds = request.friends() == null ? Set.of() : new HashSet<>(request.friends());
@@ -543,7 +542,27 @@ public class TravelService {
                 request.companionCount()
         );
 
-        return aiApiClient.generateTravel(aiRequest, JsonNode.class);
+        AiTravelGenerateResponse aiResponse = aiApiClient.generateTravel(aiRequest, AiTravelGenerateResponse.class);
+
+        // AI의 일차·방문 순서를 정렬 API 입력 형식으로 옮긴다.
+        long travelDuration = ChronoUnit.DAYS.between(request.from(), request.to()) + 1;
+        List<TravelAlignRequest.ScheduleRequest> schedules = new ArrayList<>();
+        for (int day = 1; day <= travelDuration; day++) {
+            int currentDay = day;
+            List<String> travelSpotIds = aiResponse.steps().stream()
+                    .filter(step -> step.dayIndex() == currentDay)
+                    .sorted(Comparator.comparingInt(AiTravelGenerateResponse.StepResponse::slotIndex))
+                    .map(AiTravelGenerateResponse.StepResponse::contentId)
+                    .toList();
+            schedules.add(new TravelAlignRequest.ScheduleRequest(day, travelSpotIds));
+        }
+
+        return getAlignedTravelList(new TravelAlignRequest(
+                request.from(),
+                request.to(),
+                new TravelAlignRequest.BaseballGameRequest(request.baseballGameId()),
+                schedules
+        ));
     }
 
     public PopularTravelSpotResponse getPopularSpots(
