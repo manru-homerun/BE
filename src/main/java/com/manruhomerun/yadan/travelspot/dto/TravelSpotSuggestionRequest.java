@@ -1,4 +1,4 @@
-package com.manruhomerun.yadan.travel.dto;
+package com.manruhomerun.yadan.travelspot.dto;
 
 import com.manruhomerun.yadan.travel.domain.enums.CompanionCondition;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,7 +17,7 @@ public record TravelSpotSuggestionRequest(
         @Schema(description = "여행 지역 코드", example = "11000")
         String regionCode,
 
-        @Schema(description = "동행 조건 목록")
+        @Schema(description = "동행 조건 목록", example = "[]")
         List<CompanionCondition> companionConditions,
 
         @Schema(description = "본인을 제외한 동반 인원 수", example = "1")

@@ -6,7 +6,7 @@ import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record TravelSpotDibsItemResponse(
-        @Schema(description = "여행지 ID", example = "2")
+        @Schema(description = "여행지 ID", example = "2479634")
         String id,
         @Schema(description = "여행지 이름", example = "해동용궁사")
         String name,

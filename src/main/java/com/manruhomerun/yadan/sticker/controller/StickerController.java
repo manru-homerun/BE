@@ -32,7 +32,7 @@ public class StickerController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행 스티커 조회 성공",
                     content = @Content(schema = @Schema(implementation = TravelStickerResponse.class))),
-            @ApiResponse(responseCode = "404", description = "여행을 찾을 수 없음",
+            @ApiResponse(responseCode = "404", description = "여행 또는 여행 참여 정보를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<TravelStickerResponse> getTravelStickers(

@@ -20,22 +20,16 @@ public record TravelGenerateRequest(
         @Schema(description = "여행 지역 법정동 코드", example = "26000")
         String regionCode,
 
-        @Schema(description = "무장애 여행지 우선 여부", example = "true")
-        boolean barrierFree,
-
         @Schema(description = "동행 조건 목록", example = "[\"CHILD\", \"ELDERLY\", \"WHEELCHAIR\"]")
         List<CompanionCondition> companionConditions,
 
-        @Schema(description = "본인을 제외한 동반 인원 수", example = "3")
-        int companionCount,
-
-        @Schema(description = "함께 가는 친구 ID 목록", example = "[\"jamy\", \"lida\"]")
+        @Schema(description = "함께 가는 친구의 사용자 UUID 목록", example = "[\"550e8400-e29b-41d4-a716-446655440000\", \"550e8400-e29b-41d4-a716-446655440001\"]")
         List<String> friends,
 
         @Schema(description = "여행 테마 ID", example = "2")
         Long theme,
 
-        @Schema(description = "여행지 ID 목록", example = "[239764, 233464, 232264]")
-        List<Long> travelSpotIdList
+        @Schema(description = "여행지 ID 목록", example = "[\"239764\", \"233464\", \"232264\"]")
+        List<String> travelSpotIdList
 ) {
 }

@@ -1,4 +1,4 @@
-package com.manruhomerun.yadan.travel.dto;
+package com.manruhomerun.yadan.travelspot.dto;
 
 import java.util.List;
 

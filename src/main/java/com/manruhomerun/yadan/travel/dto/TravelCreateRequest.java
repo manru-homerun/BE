@@ -19,10 +19,10 @@ public record TravelCreateRequest(
         @Schema(description = "여행 이름", example = "부산 사직 직관 여행")
         String name,
 
-        @Schema(description = "지역 코드", example = "41")
+        @Schema(description = "여행 지역 코드", example = "26000")
         String regionCode,
 
-        @Schema(description = "함께 가는 친구 ID 목록")
+        @Schema(description = "함께 가는 친구의 사용자 UUID 목록", example = "[\"550e8400-e29b-41d4-a716-446655440000\"]")
         List<String> friends,
 
         @Schema(description = "여행 테마 ID", example = "2")
@@ -35,7 +35,7 @@ public record TravelCreateRequest(
             @Schema(description = "경기 ID", example = "123")
             Long id,
 
-            @Schema(description = "당일 경기 이후 일정 시작 인덱스", example = "3")
+            @Schema(description = "경기 직전에 배치되는 여행지의 인덱스. 경기 전 여행지가 없으면 -1", example = "2")
             Integer baseballGameAfterIdx
     ) {
     }
@@ -44,7 +44,7 @@ public record TravelCreateRequest(
             @Schema(description = "여행 일차", example = "1")
             Integer day,
 
-            @Schema(description = "해당 일차의 여행지 ID 목록")
+            @Schema(description = "해당 일차의 여행지 ID 목록", example = "[\"239764\", \"233464\", \"232264\"]")
             List<String> travelSpotIdList
     ) {
     }

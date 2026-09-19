@@ -14,6 +14,7 @@ public record AiTravelGenerateRequest(
         boolean hasChild,
         boolean hasElderly,
         boolean hasDisabled,
-        int companionCount
+        int companionCount,
+        List<String> contentIdList
 ) {
 }

@@ -28,7 +28,7 @@ public record PopularTravelSpotResponse(
             @Schema(description = "여행지 이름", example = "고성오일시장")
             String title,
 
-            @Schema(description = "여행지 지역 코드", example = "33200")
+            @Schema(description = "여행지 지역 코드", example = "50332")
             Integer regionCode,
 
             @Schema(description = "사용자 찜 여부", example = "true")

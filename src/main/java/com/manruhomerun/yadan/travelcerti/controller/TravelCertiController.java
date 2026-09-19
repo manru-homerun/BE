@@ -3,8 +3,11 @@ package com.manruhomerun.yadan.travelcerti.controller;
 import com.manruhomerun.yadan.travelcerti.dto.TravelSpotVerificationRequest;
 import com.manruhomerun.yadan.travelcerti.dto.TravelSpotVerificationResponse;
 import com.manruhomerun.yadan.travelcerti.service.TravelCertiService;
+import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +32,12 @@ public class TravelCertiController {
     @PostMapping("/{travelId}/spots/{spotId}/verification")
     @Operation(summary = "여행지 방문 인증")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "여행지 방문 인증 성공")
+            @ApiResponse(responseCode = "200", description = "여행지 방문 인증 성공",
+                    content = @Content(schema = @Schema(implementation = TravelSpotVerificationResponse.class))),
+            @ApiResponse(responseCode = "400", description = "위치가 인증 가능 범위를 벗어났거나 요청값이 올바르지 않음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "여행 참여 정보, 일정의 여행지 또는 스티커팩을 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<TravelSpotVerificationResponse> verifyTravelSpot(
             @Parameter(description = "여행 ID", example = "1e3a5081-675e-4264-8e56-ebb659e12acd")

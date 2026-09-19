@@ -32,7 +32,7 @@ public record TravelDetailResponse(
         @Schema(description = "지역 코드", example = "11000")
         String regionCode,
 
-        @Schema(description = "함께 가는 친구 목록")
+        @Schema(description = "방장을 포함한 여행 참가자 닉네임 목록. 닉네임이 없으면 사용자 UUID", example = "[\"야구여행자\", \"친구1\"]")
         List<String> friends,
 
         @Schema(description = "현재 사용자의 방장 여부", example = "true")

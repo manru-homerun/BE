@@ -10,17 +10,20 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
 import com.manruhomerun.yadan.global.dto.PageResponse;
+import com.manruhomerun.yadan.travel.dto.PopularTravelSpotResponse;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelSpotCategory;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDetailResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotDibsItemResponse;
 import com.manruhomerun.yadan.travelspot.dto.TravelSpotSearchItemResponse;
+import com.manruhomerun.yadan.travelspot.dto.TravelSpotSuggestionRequest;
 import com.manruhomerun.yadan.travelspot.service.TravelSpotService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,6 +49,8 @@ public class TravelSpotController {
     @Operation(summary = "여행지 검색")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "여행지 검색 성공", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "400", description = "검색 조건이 올바르지 않음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -53,7 +58,7 @@ public class TravelSpotController {
             @Parameter(description = "검색어", example = "시장", required = true)
             @RequestParam @NotBlank(message = "keyword는 필수입니다.") String searchKeyword,
             @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
-            @RequestParam(required = false) TravelRegionCode region,
+            @RequestParam TravelRegionCode region,
             @Parameter(description = "페이지 번호", example = "1")
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "pageNumber는 1 이상이어야 합니다.") int pageNumber,
             @Parameter(description = "페이지 크기", example = "10")
@@ -62,10 +67,29 @@ public class TravelSpotController {
         return ResponseEntity.ok(travelSpotService.getSpots(searchKeyword, region, pageNumber, pageSize));
     }
 
+    @PostMapping("/suggestions")
+    @Operation(summary = "여행지 추천")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "여행지 추천 성공",
+                    content = @Content(schema = @Schema(implementation = PopularTravelSpotResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자, 여행 취향 또는 여행지를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "외부 API 호출 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<PopularTravelSpotResponse> getTravelSpotSuggestions(
+            @RequestBody TravelSpotSuggestionRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+        return ResponseEntity.ok(travelSpotService.getTravelSpotSuggestions(userId, request));
+    }
+
     @GetMapping("/{contentId}")
     @Operation(summary = "여행지 상세 조회")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "여행지 상세 조회 성공"),
+            @ApiResponse(responseCode = "200", description = "여행지 상세 조회 성공",
+                    content = @Content(schema = @Schema(implementation = TravelSpotDetailResponse.class))),
             @ApiResponse(responseCode = "404", description = "여행지를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
@@ -83,9 +107,7 @@ public class TravelSpotController {
     @GetMapping("/{contentId}/images")
     @Operation(summary = "여행지 이미지 목록 조회")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "여행지 이미지 목록 조회 성공"),
-            @ApiResponse(responseCode = "404", description = "여행지를 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "200", description = "여행지 이미지 목록 조회 성공", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "502", description = "외부 여행지 API 호출 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -137,7 +159,7 @@ public class TravelSpotController {
     @GetMapping("/dibs")
     @Operation(summary = "여행지 찜 목록 조회")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "여행지 찜 목록 조회 성공"),
+            @ApiResponse(responseCode = "200", description = "여행지 찜 목록 조회 성공", useReturnTypeSchema = true),
             @ApiResponse(responseCode = "400", description = "잘못된 region 요청",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",

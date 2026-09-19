@@ -78,7 +78,7 @@ public class AiApiClient {
         }
     }
 
-    public void recommendTravelSpots(Object requestBody) {
+    public <T> T recommendTravelSpots(Object requestBody, Class<T> responseType) {
         String path = aiApiProperties.getTravelRecommendPath();
         URI requestUri = UriComponentsBuilder.fromUriString(aiApiProperties.getBaseUrl())
                 .path(path)
@@ -109,6 +109,14 @@ public class AiApiClient {
                     .body(String.class);
 
             System.out.println("AI 여행지 추천 응답 body: " + responseBody);
+            if (responseBody == null || responseBody.isBlank()) {
+                throw new ExternalApiCallException("AI API 응답이 비어 있습니다. path=" + path);
+            }
+
+            return objectMapper.readValue(responseBody, responseType);
+        } catch (JsonProcessingException exception) {
+            logger.error("AI API 응답 파싱 실패 path={}", path, exception);
+            throw new ExternalApiCallException("AI API 응답 파싱에 실패했습니다. path=" + path);
         } catch (RestClientException exception) {
             logger.error("AI API 통신 실패 uri={}", requestUri, exception);
             throw new ExternalApiCallException("AI API 호출에 실패했습니다. path=" + path);
