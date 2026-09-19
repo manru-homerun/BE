@@ -41,9 +41,7 @@ public class PushRegistrationController {
             @Valid @RequestBody PushRegistrationRequest registrationRequest,
             HttpServletRequest httpRequest
     ) {
-        // TODO 인증 연동 시 request attribute에서 userId 조회
-        // String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111";
+        String userId = (String) httpRequest.getAttribute("userId");
 
         pushRegistrationService.register(userId, registrationRequest);
         return ResponseEntity.noContent().build();

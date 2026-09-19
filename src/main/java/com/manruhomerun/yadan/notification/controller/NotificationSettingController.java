@@ -39,9 +39,7 @@ public class NotificationSettingController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<NotificationSettingResponse> getSettings(HttpServletRequest request) {
-        // TODO 인증 연동 시 request attribute에서 userId 조회
-        // String userId = (String) request.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111";
+        String userId = (String) request.getAttribute("userId");
 
         return ResponseEntity.ok(notificationSettingService.getSettings(userId));
     }
@@ -59,9 +57,7 @@ public class NotificationSettingController {
             @Valid @RequestBody NotificationSettingUpdateRequest updateRequest,
             HttpServletRequest httpRequest
     ) {
-        // TODO 인증 연동 시 request attribute에서 userId 조회
-        // String userId = (String) httpRequest.getAttribute("userId");
-        String userId = "11111111-1111-1111-1111-111111111111";
+        String userId = (String) httpRequest.getAttribute("userId");
 
         notificationSettingService.updateSettings(userId, updateRequest);
         return ResponseEntity.noContent().build();
