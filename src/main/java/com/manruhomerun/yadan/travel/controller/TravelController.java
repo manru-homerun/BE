@@ -177,8 +177,8 @@ public class TravelController {
     public ResponseEntity<PopularTravelSpotResponse> getPopularSpots(
             @Parameter(description = "조회할 지역", example = "BUSAN", required = true)
             @RequestParam TravelRegionCode region,
-            @Parameter(description = "조회할 여행지 카테고리", example = "TOURIST_ATTRACTION", required = true)
-            @RequestParam TravelSpotCategory category,
+            @Parameter(description = "조회할 여행지 카테고리", example = "TOURIST_ATTRACTION")
+            @RequestParam(required = false) TravelSpotCategory category,
             HttpServletRequest httpRequest
     ){
         String userId = (String) httpRequest.getAttribute("userId");
