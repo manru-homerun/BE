@@ -77,4 +77,41 @@ public class AiApiClient {
             throw new ExternalApiCallException("AI API 호출에 실패했습니다. path=" + path);
         }
     }
+
+    public void recommendTravelSpots(Object requestBody) {
+        String path = aiApiProperties.getTravelRecommendPath();
+        URI requestUri = UriComponentsBuilder.fromUriString(aiApiProperties.getBaseUrl())
+                .path(path)
+                .build()
+                .encode()
+                .toUri();
+
+        logger.info("AI API 요청 시작 uri={}, body={}", requestUri, requestBody);
+
+        try {
+            String responseBody = RestClient.create()
+                    .post()
+                    .uri(requestUri)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, (request, apiResponse) -> {
+                        String errorResponseBody = new String(
+                                apiResponse.getBody().readAllBytes(),
+                                StandardCharsets.UTF_8
+                        );
+                        logger.error("AI API 오류 응답 status={}, body={}", apiResponse.getStatusCode(), errorResponseBody);
+                        throw new ExternalApiCallException(
+                                "AI API 호출에 실패했습니다. path=" + path
+                                        + "\nstatus=" + apiResponse.getStatusCode()
+                        );
+                    })
+                    .body(String.class);
+
+            System.out.println("AI 여행지 추천 응답 body: " + responseBody);
+        } catch (RestClientException exception) {
+            logger.error("AI API 통신 실패 uri={}", requestUri, exception);
+            throw new ExternalApiCallException("AI API 호출에 실패했습니다. path=" + path);
+        }
+    }
 }

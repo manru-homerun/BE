@@ -53,6 +53,7 @@ env:
   ai-api:
     base-url: ${AI_API_BASE_URL}
     travel-generate-path: /generate-course
+    travel-recommend-path: /recommend
   global:
     webhook-url: ${DISCORD_WEBHOOK_URL:}
     webhook-enabled: ${DISCORD_WEBHOOK_ENABLED:false}

@@ -10,4 +10,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AiApiProperties {
     private final String baseUrl;
     private final String travelGeneratePath;
+    private final String travelRecommendPath;
 }

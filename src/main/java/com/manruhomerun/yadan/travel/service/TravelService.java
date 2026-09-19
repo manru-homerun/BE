@@ -565,6 +565,42 @@ public class TravelService {
         ));
     }
 
+    public void getTravelSpotSuggestions(String userId, TravelSpotSuggestionRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        TravelPreference travelPreference = travelPreferenceRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserException(UserErrorCode.TRAVEL_PREFERENCE_NOT_FOUND));
+        Set<CompanionCondition> companionConditions = request.companionConditions() == null
+                ? Set.of()
+                : new HashSet<>(request.companionConditions());
+        List<String> contentIdSequence = request.travelSpotIdList() == null
+                ? List.of()
+                : request.travelSpotIdList().stream().map(String::valueOf).toList();
+
+        // 추천 요청의 장소 ID와 동행 조건을 AI 서버가 요구하는 자료형으로 변환한다.
+        AiTravelSpotRecommendRequest aiRequest = new AiTravelSpotRecommendRequest(
+                String.valueOf((LocalDate.now(ZoneId.of("Asia/Seoul")).getYear()
+                        - user.getBirthday().getYear() + 1) / 10 * 10),
+                request.regionCode(),
+                request.companionCount(),
+                contentIdSequence,
+                user.getGender().getDisplayName(),
+                companionConditions.contains(CompanionCondition.CHILD) ? 1 : 0,
+                companionConditions.contains(CompanionCondition.WHEELCHAIR) ? 1 : 0,
+                companionConditions.contains(CompanionCondition.ELDERLY) ? 1 : 0,
+                travelPreference.getPreferredRegionCodes().stream()
+                        .map(preferredRegionCode -> preferredRegionCode.getCode())
+                        .sorted()
+                        .toList(),
+                travelPreference.getResidenceRegionCode().getCode().substring(0, 2),
+                String.valueOf(ChronoUnit.DAYS.between(request.from(), request.to())),
+                request.theme(),
+                String.valueOf(travelPreference.getTravelStyleValue())
+        );
+
+        aiApiClient.recommendTravelSpots(aiRequest);
+    }
+
     public PopularTravelSpotResponse getPopularSpots(
             TravelRegionCode region,
             TravelSpotCategory category,

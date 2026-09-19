@@ -151,6 +151,17 @@ public class TravelController {
         return ResponseEntity.ok(travelService.generateTravelCourse(userId, request));
     }
 
+    @PostMapping("/spots/suggestions")
+    @Operation(summary = "여행지 추천 요청")
+    public ResponseEntity<Void> getTravelSpotSuggestions(
+            @RequestBody TravelSpotSuggestionRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+        travelService.getTravelSpotSuggestions(userId, request);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/popular-spots")
     @Operation(summary = "인기 여행지 조회")
     @ApiResponses(value = {
