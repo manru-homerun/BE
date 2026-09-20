@@ -49,21 +49,13 @@ public class NotificationSetting {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "notification_enabled", nullable = false)
+    @Column(name = "friend_notification_enabled", nullable = false)
     @ColumnDefault("true")
-    private Boolean notificationEnabled;
+    private Boolean friendNotificationEnabled;
 
-    @Column(name = "ticket_open_notification_enabled", nullable = false)
+    @Column(name = "weekly_team_schedule_notification_enabled", nullable = false)
     @ColumnDefault("true")
-    private Boolean ticketOpenNotificationEnabled;
-
-    @Column(name = "visit_verification_reminder_enabled", nullable = false)
-    @ColumnDefault("true")
-    private Boolean visitVerificationReminderEnabled;
-
-    @Column(name = "nearby_game_notification_enabled", nullable = false)
-    @ColumnDefault("true")
-    private Boolean nearbyGameNotificationEnabled;
+    private Boolean weeklyTeamScheduleNotificationEnabled;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -74,33 +66,27 @@ public class NotificationSetting {
     public static NotificationSetting createDefault(User user) {
         return NotificationSetting.builder()
                 .user(user)
-                .notificationEnabled(true)
-                .ticketOpenNotificationEnabled(true)
-                .visitVerificationReminderEnabled(true)
-                .nearbyGameNotificationEnabled(true)
+                .friendNotificationEnabled(true)
+                .weeklyTeamScheduleNotificationEnabled(true)
                 .build();
     }
 
     public void update(
-            Boolean notificationEnabled,
-            Boolean ticketOpenNotificationEnabled,
-            Boolean visitVerificationReminderEnabled,
-            Boolean nearbyGameNotificationEnabled
+            Boolean friendNotificationEnabled,
+            Boolean weeklyTeamScheduleNotificationEnabled
     ) {
-        this.notificationEnabled = notificationEnabled;
-        this.ticketOpenNotificationEnabled = ticketOpenNotificationEnabled;
-        this.visitVerificationReminderEnabled = visitVerificationReminderEnabled;
-        this.nearbyGameNotificationEnabled = nearbyGameNotificationEnabled;
+        this.friendNotificationEnabled = friendNotificationEnabled;
+        this.weeklyTeamScheduleNotificationEnabled = weeklyTeamScheduleNotificationEnabled;
     }
 
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
-        if (notificationEnabled == null) notificationEnabled = true;
-        if (ticketOpenNotificationEnabled == null) ticketOpenNotificationEnabled = true;
-        if (visitVerificationReminderEnabled == null) visitVerificationReminderEnabled = true;
-        if (nearbyGameNotificationEnabled == null) nearbyGameNotificationEnabled = true;
+        if (friendNotificationEnabled == null) friendNotificationEnabled = true;
+        if (weeklyTeamScheduleNotificationEnabled == null) {
+            weeklyTeamScheduleNotificationEnabled = true;
+        }
 
         createdAt = now;
         updatedAt = now;
