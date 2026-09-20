@@ -111,6 +111,8 @@ spec:
 
             - name: FIREBASE_ENABLED
               value: "true"
+            - name: NOTIFICATION_TEST_API_ENABLED
+              value: "true"
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /var/run/secrets/firebase/firebase-admin.json
           volumeMounts:
