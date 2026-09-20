@@ -5,25 +5,17 @@ import com.manruhomerun.yadan.notification.domain.entity.NotificationSetting;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record NotificationSettingResponse(
-        @Schema(description = "전체 알림 활성화 여부", example = "true")
-        Boolean notificationEnabled,
+        @Schema(description = "친구 신청 수신 / 친구 수락 알림 활성화 여부", example = "true")
+        Boolean friendNotificationEnabled,
 
-        @Schema(description = "예매 일자 알림 활성화 여부", example = "true")
-        Boolean ticketOpenNotificationEnabled,
-
-        @Schema(description = "방문 인증 리마인드 활성화 여부", example = "true")
-        Boolean visitVerificationReminderEnabled,
-
-        @Schema(description = "지역 경기 알림 활성화 여부", example = "true")
-        Boolean nearbyGameNotificationEnabled
+        @Schema(description = "주간 경기 일정 알림 활성화 여부", example = "true")
+        Boolean weeklyTeamScheduleNotificationEnabled
 ) {
 
     public static NotificationSettingResponse from(NotificationSetting notificationSetting) {
         return new NotificationSettingResponse(
-                notificationSetting.getNotificationEnabled(),
-                notificationSetting.getTicketOpenNotificationEnabled(),
-                notificationSetting.getVisitVerificationReminderEnabled(),
-                notificationSetting.getNearbyGameNotificationEnabled()
+                notificationSetting.getFriendNotificationEnabled(),
+                notificationSetting.getWeeklyTeamScheduleNotificationEnabled()
         );
     }
 }
