@@ -55,6 +55,9 @@ public class NotificationTestPushService {
                         installation.getFirebaseInstallationId(),
                         request.title(),
                         request.body(),
+                        request.notificationId(),
+                        request.type(),
+                        request.referenceId(),
                         request.dryRun()
                 );
                 successCount++;
