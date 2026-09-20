@@ -81,6 +81,7 @@ public class PushInstallation {
     public void updateRegistration(User user, String appVersion) {
         this.user = user;
         this.appVersion = appVersion;
+        this.updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     @PrePersist

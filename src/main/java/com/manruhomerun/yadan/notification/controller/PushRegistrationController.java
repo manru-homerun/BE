@@ -1,6 +1,8 @@
 package com.manruhomerun.yadan.notification.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +46,28 @@ public class PushRegistrationController {
         String userId = (String) httpRequest.getAttribute("userId");
 
         pushRegistrationService.register(userId, registrationRequest);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{installationId}")
+    @Operation(
+            summary = "앱 설치 정보 등록 해제",
+            description = "로그인한 사용자의 Firebase Installation ID 연결을 해제합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "앱 설치 정보 등록 해제 성공"),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> unregister(
+            @PathVariable String installationId,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+
+        pushRegistrationService.unregister(userId, installationId);
         return ResponseEntity.noContent().build();
     }
 }
