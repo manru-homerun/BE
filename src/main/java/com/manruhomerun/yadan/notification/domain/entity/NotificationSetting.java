@@ -71,7 +71,6 @@ public class NotificationSetting {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // TODO 인증 연동 시 신규 User 저장 직후 같은 트랜잭션에서 기본 알림 설정을 저장
     public static NotificationSetting createDefault(User user) {
         return NotificationSetting.builder()
                 .user(user)
