@@ -40,10 +40,8 @@ public class NotificationSettingService {
                 .orElseThrow(NotificationSettingNotFoundException::new);
 
         notificationSetting.update(
-                request.notificationEnabled(),
-                request.ticketOpenNotificationEnabled(),
-                request.visitVerificationReminderEnabled(),
-                request.nearbyGameNotificationEnabled()
+                request.friendNotificationEnabled(),
+                request.weeklyTeamScheduleNotificationEnabled()
         );
     }
 }
