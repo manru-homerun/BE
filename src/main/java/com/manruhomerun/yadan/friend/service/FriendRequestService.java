@@ -17,6 +17,8 @@ import com.manruhomerun.yadan.friend.error.exception.FriendException;
 import com.manruhomerun.yadan.friend.repository.FriendRepository;
 import com.manruhomerun.yadan.friend.repository.FriendRequestRepository;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
+import com.manruhomerun.yadan.notification.domain.enums.NotificationType;
+import com.manruhomerun.yadan.notification.service.NotificationService;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.repository.UserRepository;
 
@@ -30,6 +32,7 @@ public class FriendRequestService {
     private final FriendRequestRepository friendRequestRepository;
     private final FriendRepository friendRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // 친구 요청 생성
     public void createRequest(String requesterUserId, FriendRequestCreateRequest request) {
@@ -60,7 +63,7 @@ public class FriendRequestService {
             throw new FriendException(FriendErrorCode.ALREADY_FRIENDS);
         }
 
-        friendRequestRepository
+        FriendRequest friendRequest = friendRequestRepository
                 .findByFirstUserIdAndSecondUserId(firstUser.getId(), secondUser.getId())
                 .map(existingRequest -> {
                     if (existingRequest.getStatus() == FriendRequestStatus.PENDING) {
@@ -77,6 +80,14 @@ public class FriendRequestService {
                                 .requesterUser(requester)
                                 .build()
                 ));
+
+        notificationService.createNotification(
+                receiver,
+                NotificationType.FRIEND_REQUEST,
+                "친구 신청",
+                getDisplayName(requester) + "님이 친구 신청을 보냈습니다.",
+                friendRequest.getId().toString()
+        );
     }
 
     // 받은 친구 요청 목록 조회
@@ -139,6 +150,14 @@ public class FriendRequestService {
                         .secondUser(friendRequest.getSecondUser())
                         .build()
         );
+
+        notificationService.createNotification(
+                friendRequest.getRequesterUser(),
+                NotificationType.FRIEND_REQUEST_ACCEPTED,
+                "친구 신청 수락",
+                getDisplayName(friendRequest.getReceiverUser()) + "님이 친구 신청을 수락했습니다.",
+                friendRequest.getId().toString()
+        );
     }
     // 친구 요청 거절
     public void rejectRequest(String receiverUserId, Long requestId) {
@@ -176,5 +195,11 @@ public class FriendRequestService {
         if (friendRequest.getStatus() != FriendRequestStatus.PENDING) {
             throw new FriendException(FriendErrorCode.REQUEST_ALREADY_PROCESSED);
         }
+    }
+
+    private String getDisplayName(User user) {
+        return user.getNickname() == null || user.getNickname().isBlank()
+                ? "사용자"
+                : user.getNickname();
     }
 }

@@ -108,3 +108,12 @@ spec:
 
             - name: DISCORD_WEBHOOK_ENABLED
               value: "true"
+
+            - name: FIREBASE_ENABLED
+              value: "true"
+
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: yadan-secret
+                  key: GOOGLE_APPLICATION_CREDENTIALS
