@@ -111,9 +111,13 @@ spec:
 
             - name: FIREBASE_ENABLED
               value: "true"
-
             - name: GOOGLE_APPLICATION_CREDENTIALS
-              valueFrom:
-                secretKeyRef:
-                  name: yadan-secret
-                  key: GOOGLE_APPLICATION_CREDENTIALS
+              value: /var/run/secrets/firebase/firebase-admin.json
+          volumeMounts:
+            - name: firebase-secret
+              mountPath: /var/run/secrets/firebase
+              readOnly: true
+      volumes:
+        - name: firebase-secret
+          secret:
+            secretName: firebase-secret
