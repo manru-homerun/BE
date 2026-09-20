@@ -3,7 +3,12 @@ package com.manruhomerun.yadan.notification.error;
 import com.manruhomerun.yadan.global.error.BaseErrorCode;
 
 public enum NotificationErrorCode implements BaseErrorCode {
-    SETTING_NOT_FOUND("NOTIFICATION_404_SETTING", "알림 설정을 찾을 수 없습니다.", 404);
+    SETTING_NOT_FOUND("NOTIFICATION_404_SETTING", "알림 설정을 찾을 수 없습니다.", 404),
+    PUSH_INSTALLATION_NOT_FOUND(
+            "NOTIFICATION_404_PUSH_INSTALLATION",
+            "등록된 앱 설치 정보를 찾을 수 없습니다.",
+            404
+    );
 
     private final String code;
     private final String defaultMessage;

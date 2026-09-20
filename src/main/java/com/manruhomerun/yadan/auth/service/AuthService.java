@@ -19,6 +19,8 @@ import com.manruhomerun.yadan.auth.token.JwtProvider;
 import com.manruhomerun.yadan.auth.token.RefreshTokenClaims;
 import com.manruhomerun.yadan.auth.token.TokenPair;
 import com.manruhomerun.yadan.global.error.exception.UserNotFoundException;
+import com.manruhomerun.yadan.notification.domain.entity.NotificationSetting;
+import com.manruhomerun.yadan.notification.repository.NotificationSettingRepository;
 import com.manruhomerun.yadan.user.domain.entity.User;
 import com.manruhomerun.yadan.user.domain.enums.UserProvider;
 import com.manruhomerun.yadan.user.repository.UserRepository;
@@ -32,6 +34,7 @@ public class AuthService {
     private final KakaoApiClient kakaoApiClient;
     private final KakaoApiProperties kakaoApiProperties;
     private final UserRepository userRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
     private final JwtProvider jwtProvider;
 
     // 카카오 사용자 검증, user 생성, JWT 발급
@@ -65,6 +68,8 @@ public class AuthService {
         if (Boolean.TRUE.equals(user.getIsDeleted())) {
             throw new AuthException(AuthErrorCode.WITHDRAWN_USER);
         }
+
+        createDefaultNotificationSettingIfMissing(user);
 
         // Refresh Token의 jti로 사용할 고유 ID 생성 후 토큰 발급
         String refreshTokenId = UUID.randomUUID().toString();
@@ -149,5 +154,13 @@ public class AuthService {
                     );
                     return userRepository.save(user);
                 });
+    }
+
+    private void createDefaultNotificationSettingIfMissing(User user) {
+        if (notificationSettingRepository.existsByUserId(user.getId())) {
+            return;
+        }
+
+        notificationSettingRepository.save(NotificationSetting.createDefault(user));
     }
 }
