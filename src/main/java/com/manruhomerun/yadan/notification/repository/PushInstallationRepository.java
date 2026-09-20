@@ -12,4 +12,9 @@ public interface PushInstallationRepository extends JpaRepository<PushInstallati
     Optional<PushInstallation> findByFirebaseInstallationId(String firebaseInstallationId);
 
     List<PushInstallation> findAllByUserId(String userId);
+
+    long deleteByFirebaseInstallationIdAndUserId(
+            String firebaseInstallationId,
+            String userId
+    );
 }
