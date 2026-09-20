@@ -8,6 +8,7 @@ import com.manruhomerun.yadan.global.error.exception.ExternalApiCallException;
 import com.manruhomerun.yadan.global.properties.GlobalProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -44,6 +45,7 @@ public class DiscordWebhookClient {
             RestClient.create()
                     .post()
                     .uri(discordWebhookUrl)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(new DiscordWebhookRequest(message))
                     .retrieve()
                     .toBodilessEntity();
@@ -99,6 +101,7 @@ public class DiscordWebhookClient {
             RestClient.create()
                     .post()
                     .uri(discordWebhookUrl)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(new DiscordWebhookRequest(message))
                     .retrieve()
                     .toBodilessEntity();
@@ -138,6 +141,7 @@ public class DiscordWebhookClient {
             RestClient.create()
                     .post()
                     .uri(discordWebhookUrl)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(new DiscordWebhookRequest(message))
                     .retrieve()
                     .toBodilessEntity();
