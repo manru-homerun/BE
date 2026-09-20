@@ -67,17 +67,11 @@ public class NotificationPushService { // 설정과 전송 대상을 확인하�
             NotificationSetting setting,
             NotificationType notificationType
     ) {
-        if (!Boolean.TRUE.equals(setting.getNotificationEnabled())) {
-            return false;
-        }
-
         return switch (notificationType) {
-            case FRIEND_REQUEST, FRIEND_REQUEST_ACCEPTED -> true;
-            case TICKET_OPEN, WEEKLY_TEAM_SCHEDULE ->
-                    Boolean.TRUE.equals(setting.getTicketOpenNotificationEnabled());
-            case VISIT_VERIFICATION_REMINDER ->
-                    Boolean.TRUE.equals(setting.getVisitVerificationReminderEnabled());
-            case NEARBY_GAME -> Boolean.TRUE.equals(setting.getNearbyGameNotificationEnabled());
+            case FRIEND_REQUEST, FRIEND_REQUEST_ACCEPTED ->
+                    Boolean.TRUE.equals(setting.getFriendNotificationEnabled());
+            case WEEKLY_TEAM_SCHEDULE ->
+                    Boolean.TRUE.equals(setting.getWeeklyTeamScheduleNotificationEnabled());
         };
     }
 
