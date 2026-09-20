@@ -123,3 +123,7 @@ spec:
         - name: firebase-secret
           secret:
             secretName: firebase-secret
+            items:
+              - key: yadan-31575-firebase-adminsdk-fbsvc-4e896f15b8.json
+                path: firebase-admin.json
+
