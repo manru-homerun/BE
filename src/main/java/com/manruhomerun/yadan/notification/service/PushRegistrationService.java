@@ -38,4 +38,15 @@ public class PushRegistrationService {
                         )
                 );
     }
+
+    @Transactional
+    public void unregister(String userId, String installationId) {
+        userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        pushInstallationRepository.deleteByFirebaseInstallationIdAndUserId(
+                installationId,
+                userId
+        );
+    }
 }
