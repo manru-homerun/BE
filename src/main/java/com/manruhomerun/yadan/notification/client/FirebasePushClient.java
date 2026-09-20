@@ -34,4 +34,24 @@ public class FirebasePushClient {
 
         return firebaseMessaging.send(messageBuilder.build());
     }
+
+    public String sendTest(
+            String fid,
+            String title,
+            String body,
+            boolean dryRun
+    ) throws FirebaseMessagingException {
+        Message message = Message.builder()
+                .setFid(fid)
+                .setNotification(
+                        com.google.firebase.messaging.Notification.builder()
+                                .setTitle(title)
+                                .setBody(body)
+                                .build()
+                )
+                .putData("type", "TEST_PUSH")
+                .build();
+
+        return firebaseMessaging.send(message, dryRun);
+    }
 }

@@ -36,6 +36,9 @@ springdoc:
 firebase:
   enabled: ${FIREBASE_ENABLED:false}
 
+notification:
+  test-api-enabled: ${NOTIFICATION_TEST_API_ENABLED:false}
+
 env:
   kakao:
     app-id: ${KAKAO_APP_ID}
