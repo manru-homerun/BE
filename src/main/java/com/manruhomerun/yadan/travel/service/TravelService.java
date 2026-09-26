@@ -19,6 +19,7 @@ import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
 import com.manruhomerun.yadan.travel.error.exception.ThemeNotFoundException;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
+import com.manruhomerun.yadan.travel.error.exception.TravelScheduleOverlapException;
 import com.manruhomerun.yadan.travel.repository.*;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
@@ -68,8 +69,6 @@ public class TravelService {
     private final DibsRepository dibsRepository;
     private final ExternalApiClient externalApiClient;
     private final AiApiClient aiApiClient;
-
-    //private final TravelSpotService travelSpotService;
 
     public TravelSpot getTravelSpotById(String travelSpotId) {
         TravelSpot travelSpot = travelSpotRepository.findById(travelSpotId)
@@ -131,6 +130,13 @@ public class TravelService {
                         "여행 테마를 찾을 수 없습니다. themeId=" + request.theme()
                 )
         );
+
+        // 시작일과 종료일을 포함해 방장·동행자 중 한 명이라도 기존 여행과 겹치면 생성을 차단한다.
+        Set<String> participantIds = new HashSet<>(friendIds);
+        participantIds.add(userId);
+        if (travelUserRepository.existsOverlappingTravel(participantIds, request.from(), request.to())) {
+            throw new TravelScheduleOverlapException();
+        }
 
         Travel travel = Travel.builder()
                 .startDate(request.from())
