@@ -17,6 +17,8 @@ public interface TravelUserRepository extends JpaRepository<TravelUser, Long> {
     Page<TravelUser> findAllByUserId(String userId, Pageable pageable);
     Optional<TravelUser> findByTravelIdAndUserId(String travelId, String userId);
 
+    void deleteAllByTravelId(String travelId);
+
     @Query("""
             SELECT COUNT(tu) > 0
             FROM TravelUser tu

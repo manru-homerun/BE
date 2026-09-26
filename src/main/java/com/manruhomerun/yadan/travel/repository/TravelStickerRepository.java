@@ -9,4 +9,8 @@ public interface TravelStickerRepository extends JpaRepository<TravelSticker, Lo
     Optional<TravelSticker> findFirstByTravelUserIdOrderByIdAsc(Long travelUserId);
 
     boolean existsByTravelUserId(Long travelUserId);
+
+    void deleteAllByTravelUserId(Long travelUserId);
+
+    void deleteAllByTravelUserTravelId(String travelId);
 }

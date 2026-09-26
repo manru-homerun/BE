@@ -183,6 +183,27 @@ public class TravelService {
         }
     }
 
+    public void deleteTravel(String travelId, String userId) {
+        Travel travel = travelRepository.findById(travelId).orElseThrow(
+                () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
+        TravelUser travelUser = travelUserRepository.findByTravelIdAndUserId(travelId, userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        // 참조 중인 인증·스티커 이력을 먼저 삭제한 후 참여 정보와 일정을 삭제한다.
+        if (travelUser.isLeader()) {
+            travelCertificationRepository.deleteAllByTravelUserTravelId(travelId);
+            travelStickerRepository.deleteAllByTravelUserTravelId(travelId);
+            travelUserRepository.deleteAllByTravelId(travelId);
+            travelTravelSpotRepository.deleteTravelTravelSpotsByTravel(travel);
+            travelRepository.delete(travel);
+        } else {
+            // 동행자가 나갈 때는 해당 사용자의 이력과 참여 정보만 삭제한다.
+            travelCertificationRepository.deleteAllByTravelUserId(travelUser.getId());
+            travelStickerRepository.deleteAllByTravelUserId(travelUser.getId());
+            travelUserRepository.delete(travelUser);
+        }
+    }
+
     public void updateTravel(String travelId, String userId, TravelModifyRequest request) {
         Travel travel = travelRepository.findById(travelId).orElseThrow(
                 () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));

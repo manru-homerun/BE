@@ -19,4 +19,8 @@ public interface TravelCertificationRepository extends JpaRepository<TravelCerti
     long countVerifiedSpotsByTravelUserId(@Param("travelUserId") Long travelUserId);
 
     List<TravelCertification> findAllByTravelUserId(Long travelUserId);
+
+    void deleteAllByTravelUserId(Long travelUserId);
+
+    void deleteAllByTravelUserTravelId(String travelId);
 }
