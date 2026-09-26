@@ -244,7 +244,7 @@ public class TravelService {
         PageRequest pageRequest = PageRequest.of(
                 validatedPageNumber - 1,
                 validatedPageSize,
-                Sort.by(Sort.Order.desc("travel.startDate"), Sort.Order.desc("travel.id"))
+                Sort.by(Sort.Order.asc("travel.startDate"), Sort.Order.desc("travel.id"))
         );
 
         if (status == null) {
@@ -270,7 +270,7 @@ public class TravelService {
                 })
                 .sorted(Comparator.comparing(
                                 (TravelUser travelUser) -> travelUser.getTravel().getStartDate()
-                        ).reversed().thenComparing(
+                        ).thenComparing(
                                 travelUser -> travelUser.getTravel().getId(),
                                 Comparator.reverseOrder()
                         ))
