@@ -51,6 +51,23 @@ public class TravelController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/{travelId}")
+    @Operation(summary = "여행 나가기 또는 삭제")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "여행 나가기 또는 삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "여행 또는 여행 참여 정보를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Void> deleteTravel(
+            @Parameter(description = "나가거나 삭제할 여행 ID", example = "1e3a5081-675e-4264-8e56-ebb659e12acd")
+            @PathVariable String travelId,
+            HttpServletRequest httpRequest
+    ) {
+        String userId = (String) httpRequest.getAttribute("userId");
+        travelService.deleteTravel(travelId, userId);
+        return ResponseEntity.noContent().build();
+    }
+
     // 특정 여행 수정
     @PutMapping("/{travelId}")
     @Operation(summary = "특정 여행 수정")
