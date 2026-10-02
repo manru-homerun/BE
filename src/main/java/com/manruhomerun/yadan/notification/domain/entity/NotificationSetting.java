@@ -57,6 +57,10 @@ public class NotificationSetting {
     @ColumnDefault("true")
     private Boolean weeklyTeamScheduleNotificationEnabled;
 
+    @Column(name = "travel_notification_enabled", nullable = false)
+    @ColumnDefault("true")
+    private Boolean travelNotificationEnabled;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -68,15 +72,18 @@ public class NotificationSetting {
                 .user(user)
                 .friendNotificationEnabled(true)
                 .weeklyTeamScheduleNotificationEnabled(true)
+                .travelNotificationEnabled(true)
                 .build();
     }
 
     public void update(
             Boolean friendNotificationEnabled,
-            Boolean weeklyTeamScheduleNotificationEnabled
+            Boolean weeklyTeamScheduleNotificationEnabled,
+            Boolean travelNotificationEnabled
     ) {
         this.friendNotificationEnabled = friendNotificationEnabled;
         this.weeklyTeamScheduleNotificationEnabled = weeklyTeamScheduleNotificationEnabled;
+        this.travelNotificationEnabled = travelNotificationEnabled;
     }
 
     @PrePersist
@@ -87,6 +94,7 @@ public class NotificationSetting {
         if (weeklyTeamScheduleNotificationEnabled == null) {
             weeklyTeamScheduleNotificationEnabled = true;
         }
+        if (travelNotificationEnabled == null) travelNotificationEnabled = true;
 
         createdAt = now;
         updatedAt = now;
