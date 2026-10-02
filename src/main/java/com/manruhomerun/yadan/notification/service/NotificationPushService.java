@@ -72,6 +72,8 @@ public class NotificationPushService { // 설정과 전송 대상을 확인하�
                     Boolean.TRUE.equals(setting.getFriendNotificationEnabled());
             case WEEKLY_TEAM_SCHEDULE ->
                     Boolean.TRUE.equals(setting.getWeeklyTeamScheduleNotificationEnabled());
+            case TRAVEL_REMINDER_D3 ->
+                    Boolean.TRUE.equals(setting.getTravelNotificationEnabled());
         };
     }
 
