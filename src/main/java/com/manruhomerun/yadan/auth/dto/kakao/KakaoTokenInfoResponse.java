@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record KakaoTokenInfoResponse(
         Long id,
-        Long expiresInMillis,
+        @JsonProperty("expires_in")
+        Long expiresInSeconds,
         @JsonProperty("app_id")
         Long appId
 ) {
