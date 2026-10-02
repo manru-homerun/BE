@@ -10,6 +10,10 @@ public record NotificationSettingUpdateRequest(
 
         @NotNull(message = "주간 경기 일정 알림 활성화 여부는 필수입니다.")
         @Schema(description = "주간 경기 일정 알림 활성화 여부", example = "true")
-        Boolean weeklyTeamScheduleNotificationEnabled
+        Boolean weeklyTeamScheduleNotificationEnabled,
+
+        @NotNull(message = "여행 알림 활성화 여부는 필수입니다.")
+        @Schema(description = "여행 알림 활성화 여부", example = "true")
+        Boolean travelNotificationEnabled
 ) {
 }

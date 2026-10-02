@@ -9,13 +9,17 @@ public record NotificationSettingResponse(
         Boolean friendNotificationEnabled,
 
         @Schema(description = "주간 경기 일정 알림 활성화 여부", example = "true")
-        Boolean weeklyTeamScheduleNotificationEnabled
+        Boolean weeklyTeamScheduleNotificationEnabled,
+
+        @Schema(description = "여행 알림 활성화 여부", example = "true")
+        Boolean travelNotificationEnabled
 ) {
 
     public static NotificationSettingResponse from(NotificationSetting notificationSetting) {
         return new NotificationSettingResponse(
                 notificationSetting.getFriendNotificationEnabled(),
-                notificationSetting.getWeeklyTeamScheduleNotificationEnabled()
+                notificationSetting.getWeeklyTeamScheduleNotificationEnabled(),
+                notificationSetting.getTravelNotificationEnabled()
         );
     }
 }
