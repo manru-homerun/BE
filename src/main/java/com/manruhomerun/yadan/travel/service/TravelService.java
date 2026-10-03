@@ -19,6 +19,7 @@ import com.manruhomerun.yadan.travel.dto.*;
 import com.manruhomerun.yadan.travel.error.TravelErrorCode;
 import com.manruhomerun.yadan.travel.error.exception.ThemeNotFoundException;
 import com.manruhomerun.yadan.travel.error.exception.TravelNotFoundException;
+import com.manruhomerun.yadan.travel.error.exception.TravelScheduleOverlapException;
 import com.manruhomerun.yadan.travel.repository.*;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.enums.TravelRegionCode;
@@ -68,8 +69,6 @@ public class TravelService {
     private final DibsRepository dibsRepository;
     private final ExternalApiClient externalApiClient;
     private final AiApiClient aiApiClient;
-
-    //private final TravelSpotService travelSpotService;
 
     public TravelSpot getTravelSpotById(String travelSpotId) {
         TravelSpot travelSpot = travelSpotRepository.findById(travelSpotId)
@@ -132,6 +131,13 @@ public class TravelService {
                 )
         );
 
+        // 시작일과 종료일을 포함해 방장·동행자 중 한 명이라도 기존 여행과 겹치면 생성을 차단한다.
+        Set<String> participantIds = new HashSet<>(friendIds);
+        participantIds.add(userId);
+        if (travelUserRepository.existsOverlappingTravel(participantIds, request.from(), request.to())) {
+            throw new TravelScheduleOverlapException();
+        }
+
         Travel travel = Travel.builder()
                 .startDate(request.from())
                 .endDate(request.to())
@@ -177,6 +183,27 @@ public class TravelService {
         }
     }
 
+    public void deleteTravel(String travelId, String userId) {
+        Travel travel = travelRepository.findById(travelId).orElseThrow(
+                () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
+        TravelUser travelUser = travelUserRepository.findByTravelIdAndUserId(travelId, userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        // 참조 중인 인증·스티커 이력을 먼저 삭제한 후 참여 정보와 일정을 삭제한다.
+        if (travelUser.isLeader()) {
+            travelCertificationRepository.deleteAllByTravelUserTravelId(travelId);
+            travelStickerRepository.deleteAllByTravelUserTravelId(travelId);
+            travelUserRepository.deleteAllByTravelId(travelId);
+            travelTravelSpotRepository.deleteTravelTravelSpotsByTravel(travel);
+            travelRepository.delete(travel);
+        } else {
+            // 동행자가 나갈 때는 해당 사용자의 이력과 참여 정보만 삭제한다.
+            travelCertificationRepository.deleteAllByTravelUserId(travelUser.getId());
+            travelStickerRepository.deleteAllByTravelUserId(travelUser.getId());
+            travelUserRepository.delete(travelUser);
+        }
+    }
+
     public void updateTravel(String travelId, String userId, TravelModifyRequest request) {
         Travel travel = travelRepository.findById(travelId).orElseThrow(
                 () -> new TravelNotFoundException(TravelErrorCode.TRAVEL_NOT_FOUND, "여행을 찾을 수 없습니다. travelId=" + travelId));
@@ -217,7 +244,7 @@ public class TravelService {
         PageRequest pageRequest = PageRequest.of(
                 validatedPageNumber - 1,
                 validatedPageSize,
-                Sort.by(Sort.Order.desc("travel.startDate"), Sort.Order.desc("travel.id"))
+                Sort.by(Sort.Order.asc("travel.startDate"), Sort.Order.desc("travel.id"))
         );
 
         if (status == null) {
@@ -243,7 +270,7 @@ public class TravelService {
                 })
                 .sorted(Comparator.comparing(
                                 (TravelUser travelUser) -> travelUser.getTravel().getStartDate()
-                        ).reversed().thenComparing(
+                        ).thenComparing(
                                 travelUser -> travelUser.getTravel().getId(),
                                 Comparator.reverseOrder()
                         ))
