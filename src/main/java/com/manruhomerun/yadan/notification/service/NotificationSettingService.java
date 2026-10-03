@@ -41,7 +41,8 @@ public class NotificationSettingService {
 
         notificationSetting.update(
                 request.friendNotificationEnabled(),
-                request.weeklyTeamScheduleNotificationEnabled()
+                request.weeklyTeamScheduleNotificationEnabled(),
+                request.travelNotificationEnabled()
         );
     }
 }

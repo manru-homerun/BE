@@ -18,4 +18,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             LocalDateTime startDateTime,
             LocalDateTime endDateTime
     );
+
+    boolean existsByUserIdAndTypeAndReferenceId(
+            String userId,
+            NotificationType type,
+            String referenceId
+    );
 }
