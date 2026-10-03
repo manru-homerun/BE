@@ -49,8 +49,8 @@ public class AuthService {
         if (tokenInfo == null
                 || tokenInfo.id() == null
                 || tokenInfo.appId() == null
-                || tokenInfo.expiresInMillis() == null
-                || tokenInfo.expiresInMillis() <= 0
+                || tokenInfo.expiresInSeconds() == null
+                || tokenInfo.expiresInSeconds() <= 0
                 || !Objects.equals(tokenInfo.appId(), kakaoApiProperties.getAppId())) {
             throw new AuthException(AuthErrorCode.INVALID_KAKAO_TOKEN);
         }
