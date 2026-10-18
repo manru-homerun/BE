@@ -53,6 +53,7 @@ public class TravelDataProcessScheduler {
 
     private List<File> processTravelData(LocalDate date) {
         List<Travel> travels = travelRepository.findTravelByEndDate(date);
+        logger.info("여행 CSV 대상 조회 완료. date={}, count={}", date, travels.size());
         if (travels.isEmpty()) return List.of();
 
         List<String> travelIds = travels.stream().map(Travel::getId).toList();
@@ -78,6 +79,7 @@ public class TravelDataProcessScheduler {
             files.add(tripsPath.toFile());
             files.add(itemsPath.toFile());
             MessageDigest userIdDigest = MessageDigest.getInstance("SHA-256");
+            int exportedCount = 0;
 
             try (BufferedWriter tripsWriter = Files.newBufferedWriter(tripsPath, StandardCharsets.UTF_8);
                  BufferedWriter itemsWriter = Files.newBufferedWriter(itemsPath, StandardCharsets.UTF_8)) {
@@ -88,6 +90,10 @@ public class TravelDataProcessScheduler {
                     List<TravelUser> leaders = travel.getTravelUserList().stream()
                             .filter(TravelUser::isLeader).toList();
                     User leader = leaders.getFirst().getUser();
+                    if (Boolean.TRUE.equals(leader.getIsDeleted())) {
+                        logger.info("방장이 탈퇴한 여행은 CSV에서 제외합니다. tripId={}", travel.getId());
+                        continue;
+                    }
                     TravelPreference preference = preferencesByUserId.get(leader.getId());
 
                     long duration = ChronoUnit.DAYS.between(travel.getStartDate(), travel.getEndDate()) + 1;
@@ -137,10 +143,12 @@ public class TravelDataProcessScheduler {
                                 .map(value -> "\"" + value.replace("\"", "\"\"") + "\"")
                                 .collect(Collectors.joining(",")) + "\r\n");
                     }
+                    exportedCount++;
                 }
             }
 
-            logger.info("여행 CSV 생성 완료. date={}, exported={}", date, travels.size());
+            logger.info("여행 CSV 생성 완료. date={}, exported={}, excluded={}",
+                    date, exportedCount, travels.size() - exportedCount);
             return files;
         } catch (IOException | NoSuchAlgorithmException | RuntimeException exception) {
             // 파일 생성 중 실패하면 불완전한 CSV를 남기거나 업로드하지 않는다.
@@ -164,12 +172,23 @@ public class TravelDataProcessScheduler {
 
     @Scheduled(cron = "0 0 2 * * *", zone = "Asia/Seoul")
     public void uploadData() {
-        LocalDate date = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1);
+        uploadData(LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1));
+    }
+
+    public void uploadData(LocalDate date) {
+        logger.info("여행 CSV 업로드 작업 시작. date={}", date);
         // 지연 로딩에 필요한 트랜잭션은 CSV 생성까지만 유지하고 S3 통신 전에 종료한다.
         TransactionTemplate transaction = new TransactionTemplate(transactionManager);
         transaction.setReadOnly(true);
-        List<File> files = transaction.execute(status -> processTravelData(date));
+        List<File> files;
+        try {
+            files = transaction.execute(status -> processTravelData(date));
+        } catch (RuntimeException exception) {
+            logger.error("여행 CSV 조회 또는 생성에 실패했습니다. date={}", date, exception);
+            throw exception;
+        }
         if (files == null || files.isEmpty()) {
+            logger.info("종료된 여행이 없어 CSV 업로드를 생략합니다. date={}", date);
             return;
         }
 
@@ -185,13 +204,20 @@ public class TravelDataProcessScheduler {
                         .contentType("text/csv; charset=utf-8")
                         .build();
 
+                logger.info("S3 CSV 파일 업로드 시작. bucket={}, key={}, bytes={}",
+                        request.bucket(), request.key(), file.length());
                 CompletableFuture<PutObjectResponse> uploadFuture = s3Client.putObject(
                         request, AsyncRequestBody.fromFile(file.toPath()));
 
                 // 각 파일 업로드가 끝난 뒤 다음 파일을 전송하고 클라이언트를 닫는다.
                 uploadFuture.join();
+                logger.info("S3 CSV 파일 업로드 완료. bucket={}, key={}", request.bucket(), request.key());
             }
             logger.info("여행 CSV 업로드 완료. date={}, files={}", date, files.size());
+        } catch (RuntimeException exception) {
+            logger.error("S3 CSV 업로드에 실패했습니다. date={}, bucket={}",
+                    date, s3Properties.getBucketName(), exception);
+            throw exception;
         } finally {
             for (File file : files) {
                 try {
