@@ -5,7 +5,8 @@ import com.manruhomerun.yadan.global.error.BaseErrorCode;
 public enum TravelErrorCode implements BaseErrorCode {
     TRAVEL_NOT_FOUND("TRAVEL_404", "여행을 찾을 수 없습니다.", 404),
     TRAVEL_SCHEDULE_OVERLAP("TRAVEL_404_SCHEDULE_OVERLAP", "방장 또는 동행자의 기존 여행 일정과 겹칩니다.", 404),
-    THEME_NOT_FOUND("THEME_404", "여행 테마를 찾을 수 없습니다.", 404);
+    THEME_NOT_FOUND("THEME_404", "여행 테마를 찾을 수 없습니다.", 404),
+    TRAVEL_DATA_EXPORT_FAILED("TRAVEL_500_DATA_EXPORT", "여행 데이터 파일 생성에 실패했습니다.", 500);
 
     private final String code;
     private final String defaultMessage;
