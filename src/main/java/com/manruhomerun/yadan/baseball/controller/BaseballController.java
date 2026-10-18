@@ -1,6 +1,7 @@
 package com.manruhomerun.yadan.baseball.controller;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,6 @@ import com.manruhomerun.yadan.baseball.dto.BaseballGameDetailResponse;
 import com.manruhomerun.yadan.baseball.dto.BaseballGameScheduleItemResponse;
 import com.manruhomerun.yadan.baseball.service.BaseballService;
 import com.manruhomerun.yadan.global.dto.ErrorResponse;
-import com.manruhomerun.yadan.global.dto.PageResponse;
 
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -73,14 +73,12 @@ public class BaseballController {
             @ApiResponse(responseCode = "404", description = "팀을 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<PageResponse<BaseballGameScheduleItemResponse>> getTeamGameSchedules(
+    public ResponseEntity<List<BaseballGameScheduleItemResponse>> getTeamGameSchedules(
             @Parameter(description = "조회할 팀 ID", example = "1")
             @PathVariable Long teamId,
             @Parameter(description = "조회 기준일, 미입력 시 오늘 날짜 사용", example = "2026-06-28")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baselineDate,
-            @Parameter(description = "페이지 번호, 1부터 시작", example = "1")
-            @RequestParam(defaultValue = "1") int page
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate baselineDate
     ) {
-        return ResponseEntity.ok(baseballService.getTeamGameSchedules(teamId, baselineDate, page));
+        return ResponseEntity.ok(baseballService.getTeamGameSchedules(teamId, baselineDate));
     }
 }

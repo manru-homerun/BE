@@ -33,14 +33,15 @@ public interface BaseballGameRepository extends JpaRepository<BaseballGame, Long
     
         WHERE (bg.homeTeam.id = :teamId OR bg.awayTeam.id = :teamId)
     
-          AND bg.gameDate >= :gameDate
+          AND bg.gameDate >= :startDateTime
+          AND bg.gameDate < :endDateTime
     
         ORDER BY bg.gameDate ASC, bg.id ASC
     """)
-    Page<BaseballGame> findUpcomingGamesByTeamId(
+    List<BaseballGame> findUpcomingGamesByTeamId(
             @Param("teamId") Long teamId,
-            @Param("gameDate") LocalDateTime baselineDateTime,
-            Pageable pageable
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
     );
 
     @Query("""

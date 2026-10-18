@@ -5,6 +5,7 @@ import com.manruhomerun.yadan.travel.domain.entity.TravelTravelSpot;
 import com.manruhomerun.yadan.travelspot.domain.entity.TravelSpot;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,6 +14,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TravelTravelSpotRepository extends JpaRepository<TravelTravelSpot, Long> {
+    @EntityGraph(attributePaths = "travelSpot")
+    List<TravelTravelSpot> findAllByTravelIdInOrderByDayAscOrderAscIdAsc(List<String> travelIds);
+
     void deleteTravelTravelSpotsByTravel(Travel travel);
 
     @Query("""

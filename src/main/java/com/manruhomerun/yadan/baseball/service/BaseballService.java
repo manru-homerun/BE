@@ -2,6 +2,7 @@ package com.manruhomerun.yadan.baseball.service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -69,7 +70,7 @@ public class BaseballService {
         );
     }
 
-    public PageResponse<BaseballGameScheduleItemResponse> getTeamGameSchedules(Long teamId, LocalDate baselineDate, int pageNumber) {
+    public List<BaseballGameScheduleItemResponse> getTeamGameSchedules(Long teamId, LocalDate baselineDate) {
         if (!baseballTeamRepository.existsById(teamId)) {
             throw new BaseballResourceNotFoundException(
                     BaseballErrorCode.BASEBALL_TEAM_NOT_FOUND,
@@ -77,24 +78,16 @@ public class BaseballService {
             );
         }
 
-        int validatedPageNumber = Math.max(pageNumber, 1);
-        PageRequest pageRequest = PageRequest.of(
-                validatedPageNumber - 1,
-                6,
-                Sort.by(Sort.Order.asc("gameDate"), Sort.Order.asc("id"))
-        );
-
-        Page<BaseballGame> page = baseballGameRepository.findUpcomingGamesByTeamId(
+        LocalDate startDate = baselineDate == null ? LocalDate.now(ZoneId.of("Asia/Seoul")) : baselineDate;
+        // 기준일 8일 뒤까지 포함하도록, 9일 뒤 자정을 제외 상한으로 사용한다.
+        List<BaseballGame> games = baseballGameRepository.findUpcomingGamesByTeamId(
                 teamId,
-                (baselineDate == null ? LocalDate.now(ZoneId.of("Asia/Seoul")) : baselineDate).atStartOfDay(),
-                pageRequest
+                startDate.atStartOfDay(),
+                startDate.plusDays(9).atStartOfDay()
         );
 
-        return PageResponse.from(
-                page,
-                page.getContent().stream()
-                        .map(BaseballGameScheduleItemResponse::from)
-                        .toList()
-        );
+        return games.stream()
+                .map(BaseballGameScheduleItemResponse::from)
+                .toList();
     }
 }
